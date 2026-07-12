@@ -1244,6 +1244,7 @@ select {
 
 .grocery-item-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -1265,20 +1266,27 @@ select {
   gap: 10px;
   cursor: pointer;
   flex: 1;
+  min-width: 0;
   color: #40363a;
   font-weight: 600;
 }
 
 .grocery-item-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
   align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .decrease-grocery-item-button,
 .increase-grocery-item-button,
 .edit-grocery-department-button,
-.delete-grocery-item-button {
+.delete-grocery-item-button,
+.expand-grocery-actions-button,
+.collapse-grocery-actions-button {
   width: 34px;
   height: 34px;
   padding: 0;
@@ -1297,7 +1305,9 @@ select {
 .decrease-grocery-item-button:hover,
 .increase-grocery-item-button:hover,
 .edit-grocery-department-button:hover,
-.delete-grocery-item-button:hover {
+.delete-grocery-item-button:hover,
+.expand-grocery-actions-button:hover,
+.collapse-grocery-actions-button:hover {
   background: #fdeff3;
   border-color: #e7b6c7;
   transform: translateY(-1px);
@@ -1421,6 +1431,7 @@ select {
 
 .pantry-item-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -1432,6 +1443,11 @@ select {
   background: transparent;
   color: #40363a;
   font-weight: 600;
+}
+
+.pantry-item-row > span {
+  flex: 1;
+  min-width: 0;
 }
 
 .pantry-department-items > .pantry-item-row:last-child {
@@ -1456,14 +1472,20 @@ select {
 
 .pantry-item-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
   align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .edit-pantry-item-button,
 .decrease-pantry-item-button,
 .increase-pantry-item-button,
-.delete-pantry-item-button {
+.delete-pantry-item-button,
+.expand-pantry-actions-button,
+.collapse-pantry-actions-button {
   width: 34px;
   height: 34px;
   padding: 0;
@@ -1482,7 +1504,9 @@ select {
 .edit-pantry-item-button:hover,
 .decrease-pantry-item-button:hover,
 .increase-pantry-item-button:hover,
-.delete-pantry-item-button:hover {
+.delete-pantry-item-button:hover,
+.expand-pantry-actions-button:hover,
+.collapse-pantry-actions-button:hover {
   background: #fdeff3;
   border-color: #e7b6c7;
   transform: translateY(-1px);

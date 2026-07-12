@@ -944,9 +944,11 @@
       let collapsedMealDays = {};
       let groceryDepartmentOverrides = {};
       let groceryDepartmentPickerItem = null;
+      let groceryActionsItemId = null;
       let hiddenGroceryItems = {};
       let groceryQuantityAdjustments = {};
       let editingPantryItem = null;
+      let pantryActionsItemId = null;
 
       const mealPlanDays = [
         "Monday",
@@ -1985,33 +1987,19 @@
           </label>
 
           <div class="grocery-item-actions">
-            <button
-              class="decrease-grocery-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-minus"></i>
-            </button>
-
-            <button
-              class="increase-grocery-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-plus"></i>
-            </button>
-
-            <button
-              class="edit-grocery-department-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-pencil"></i>
-            </button>
-
-            <button
-              class="delete-grocery-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-trash-2"></i>
-            </button>
+            ${
+              groceryActionsItemId === item.id
+                ? `
+            <button class="decrease-grocery-item-button" data-item-id="${item.id}"><i class="icon-minus"></i></button>
+            <button class="increase-grocery-item-button" data-item-id="${item.id}"><i class="icon-plus"></i></button>
+            <button class="edit-grocery-department-button" data-item-id="${item.id}"><i class="icon-pencil"></i></button>
+            <button class="delete-grocery-item-button" data-item-id="${item.id}"><i class="icon-trash-2"></i></button>
+            <button class="collapse-grocery-actions-button" data-item-id="${item.id}" aria-label="Close actions"><i class="icon-x"></i></button>
+          `
+                : `
+            <button class="expand-grocery-actions-button" data-item-id="${item.id}" aria-label="Item actions"><i class="icon-ellipsis-vertical"></i></button>
+          `
+            }
           </div>
         </div>
 
@@ -2147,6 +2135,24 @@
               saveManualShoppingItems();
               saveHiddenGroceryItems();
               saveCheckedGroceryItems();
+              displayGroceryList();
+            });
+          });
+
+        document
+          .querySelectorAll(".expand-grocery-actions-button")
+          .forEach(function (button) {
+            button.addEventListener("click", function () {
+              groceryActionsItemId = button.dataset.itemId;
+              displayGroceryList();
+            });
+          });
+
+        document
+          .querySelectorAll(".collapse-grocery-actions-button")
+          .forEach(function (button) {
+            button.addEventListener("click", function () {
+              groceryActionsItemId = null;
               displayGroceryList();
             });
           });
@@ -2489,33 +2495,19 @@
 </span>
 
           <div class="pantry-item-actions">
-            <button
-              class="edit-pantry-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-pencil"></i>
-            </button>
-
-            <button
-              class="decrease-pantry-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-minus"></i>
-            </button>
-
-            <button
-              class="increase-pantry-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-plus"></i>
-            </button>
-
-            <button
-              class="delete-pantry-item-button"
-              data-item-id="${item.id}"
-            >
-              <i class="icon-trash-2"></i>
-            </button>
+            ${
+              pantryActionsItemId === item.id
+                ? `
+            <button class="edit-pantry-item-button" data-item-id="${item.id}"><i class="icon-pencil"></i></button>
+            <button class="decrease-pantry-item-button" data-item-id="${item.id}"><i class="icon-minus"></i></button>
+            <button class="increase-pantry-item-button" data-item-id="${item.id}"><i class="icon-plus"></i></button>
+            <button class="delete-pantry-item-button" data-item-id="${item.id}"><i class="icon-trash-2"></i></button>
+            <button class="collapse-pantry-actions-button" data-item-id="${item.id}" aria-label="Close actions"><i class="icon-x"></i></button>
+          `
+                : `
+            <button class="expand-pantry-actions-button" data-item-id="${item.id}" aria-label="Item actions"><i class="icon-ellipsis-vertical"></i></button>
+          `
+            }
           </div>
         </div>
 
@@ -2787,6 +2779,24 @@ ${
               });
 
               savePantryItems();
+              displayPantryItems();
+            });
+          });
+
+        document
+          .querySelectorAll(".expand-pantry-actions-button")
+          .forEach(function (button) {
+            button.addEventListener("click", function () {
+              pantryActionsItemId = button.dataset.itemId;
+              displayPantryItems();
+            });
+          });
+
+        document
+          .querySelectorAll(".collapse-pantry-actions-button")
+          .forEach(function (button) {
+            button.addEventListener("click", function () {
+              pantryActionsItemId = null;
               displayPantryItems();
             });
           });
