@@ -1241,6 +1241,17 @@ select {
   border-top: 1px solid #f1dfe6;
 }
 
+.grocery-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.grocery-top-actions button {
+  margin: 0;
+}
+
 .grocery-item-row {
   display: flex;
   flex-wrap: wrap;

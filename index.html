@@ -627,7 +627,13 @@
         <h2>This Week's Shopping List</h2>
         <p>Generated from your meal plan plus anything you add manually.</p>
 
-        <button id="clearGroceryListTopButton">Clear All Grocery Items</button>
+        <div class="grocery-top-actions">
+          <button id="sendToHomeAssistantButton" class="secondary-button">
+            <i class="icon-house"></i>
+            Send to Home Assistant
+          </button>
+          <button id="clearGroceryListTopButton">Clear All Grocery Items</button>
+        </div>
 
         <div id="groceryListContainer"></div>
 
@@ -4838,6 +4844,74 @@ ${
       clearGroceryListBottomButton.addEventListener("click", function () {
         clearGroceryList();
       });
+
+      function getGroceryItemsForHomeAssistant() {
+        const rows = groceryListContainer.querySelectorAll(
+          ".grocery-item-row:not(.grocery-item-checked)"
+        );
+        const items = [];
+        rows.forEach(function (row) {
+          const label = row.querySelector("label");
+          if (!label) return;
+          const text = label.textContent.replace(/\s+/g, " ").trim();
+          if (text) items.push(text);
+        });
+        return items;
+      }
+
+      const sendToHomeAssistantButton = document.getElementById(
+        "sendToHomeAssistantButton"
+      );
+      if (sendToHomeAssistantButton) {
+        sendToHomeAssistantButton.addEventListener("click", async function () {
+          const items = getGroceryItemsForHomeAssistant();
+          if (items.length === 0) {
+            showToast(
+              "Nothing to send — your grocery list is empty or all checked off."
+            );
+            return;
+          }
+
+          const originalHtml = sendToHomeAssistantButton.innerHTML;
+          sendToHomeAssistantButton.disabled = true;
+          sendToHomeAssistantButton.textContent = "Sending...";
+
+          try {
+            const response = await fetch(
+              "https://meal-planner-import-server-production.up.railway.app/api/syncHomeAssistant",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items: items }),
+              }
+            );
+
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || "Sync failed.");
+            }
+
+            let msg =
+              "Sent " +
+              data.added +
+              " item" +
+              (data.added === 1 ? "" : "s") +
+              " to Home Assistant.";
+            if (data.skipped) {
+              msg += " (" + data.skipped + " already on the list.)";
+            }
+            showToast(msg, "success");
+          } catch (error) {
+            showToast(
+              error.message ||
+                "Couldn't reach Home Assistant. Please try again."
+            );
+          } finally {
+            sendToHomeAssistantButton.disabled = false;
+            sendToHomeAssistantButton.innerHTML = originalHtml;
+          }
+        });
+      }
 
       addPantryItemButton.addEventListener("click", function () {
         addPantryItem();
