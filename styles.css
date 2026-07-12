@@ -573,59 +573,46 @@ select {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: 90px 110px minmax(0, 1fr) 48px;
-  gap: 14px;
+  grid-template-columns: 72px 100px minmax(0, 1fr) 38px;
+  gap: 8px;
   align-items: center;
 
-  margin-bottom: 14px;
-  padding: 14px 16px;
+  margin-bottom: 8px;
+  padding: 0;
 
-  background: linear-gradient(180deg, #ffffff 0%, #fffafb 100%);
-
-  border: 1px solid #f2dfe6;
-  border-radius: 18px;
-
-  box-shadow: 0 4px 10px rgba(221, 188, 199, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.03);
-
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.ingredient-row:hover {
-  border-color: #e7b6c7;
-
-  box-shadow: 0 10px 22px rgba(221, 188, 199, 0.16),
-    0 3px 8px rgba(0, 0, 0, 0.04);
-
-  transform: translateY(-1px);
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .ingredient-row input {
   margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
 }
 
 .delete-ingredient-button {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   padding: 0;
   margin: 0;
-  border-radius: 50%;
+  border-radius: 10px;
   background: #fff9fb;
   border: 1px solid #edd6de;
   color: #c9a04d;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .delete-ingredient-button:hover {
   background: #fdeff3;
   border-color: #e7b6c7;
   color: #b15b6c;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(231, 182, 199, 0.28);
 }
 
 .recipe-card {
@@ -926,10 +913,10 @@ select {
 }
 
 .meal-day-card {
-  background: linear-gradient(180deg, #ffffff 0%, #fffafb 100%);
+  background: #ffffff;
   border: 1px solid #f1dfe6;
-  border-radius: 24px;
-  padding: 22px;
+  border-radius: 20px;
+  overflow: hidden;
   box-shadow: 0 12px 30px rgba(221, 188, 199, 0.14),
     0 2px 6px rgba(0, 0, 0, 0.03);
 }
@@ -939,9 +926,9 @@ select {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
-  border-bottom: 2px solid #e4c680;
+  margin: 0;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #fff7fa 0%, #fdeff3 100%);
 }
 
 .meal-day-card h3 {
@@ -952,10 +939,40 @@ select {
   letter-spacing: -0.3px;
 }
 
+.meal-day-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.meal-day-toggle:hover {
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.meal-day-toggle i {
+  color: #b88d3f;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
 .meal-slots-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+  padding: 16px 18px 18px;
+}
+
+.meal-slots-row.hidden {
+  display: none;
 }
 
 .meal-slot {
@@ -1517,191 +1534,6 @@ select {
   margin: 8px 0 0;
   color: #7a5f2a;
   font-weight: 600;
-}
-
-/* ==================================================
-   MOBILE LAYOUT
-================================================== */
-
-@media (max-width: 650px) {
-  body {
-    padding: 14px;
-  }
-
-  h1 {
-    font-size: 30px;
-    margin-bottom: 20px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  .auth-card {
-    padding: 30px 22px;
-  }
-
-  /* Dashboard header, logo, greeting */
-  .dashboard-header {
-    margin-bottom: 40px;
-  }
-
-  .logo-script {
-    font-size: 34px;
-  }
-
-  .logo-title {
-    display: block;
-    margin-left: 0;
-    font-size: 24px;
-  }
-
-  .dashboard-greeting h1 {
-    font-size: 30px;
-  }
-
-  .logout-button {
-    position: static;
-    display: block;
-    width: fit-content;
-    margin: 0 auto 18px;
-  }
-
-  /* Dashboard cards — two per row, icon stacked on top */
-  .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-
-  .dashboard-card {
-    min-height: 0;
-    padding: 22px 14px;
-    border-radius: 22px;
-    text-align: center;
-  }
-
-  .dashboard-card::before {
-    display: none;
-  }
-
-  .dashboard-icon {
-    position: static;
-    transform: none;
-    margin-bottom: 8px;
-    font-size: 32px;
-  }
-
-  .dashboard-card h2 {
-    margin-top: 4px;
-    font-size: 20px;
-  }
-
-  .dashboard-stat {
-    font-size: 13px;
-  }
-
-  /* Snapshots stack vertically */
-  .dashboard-snapshots {
-    grid-template-columns: 1fr;
-  }
-
-  #todayPlanSnapshot {
-    grid-row: auto;
-  }
-
-  /* Page headers (Recipe Vault, Meal Planner, etc.) */
-  .page-header {
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-
-  .page-script {
-    font-size: 26px;
-  }
-
-  .page-title-group h1 {
-    font-size: 32px;
-  }
-
-  .page-title-group h1 i {
-    font-size: 26px;
-  }
-
-  .page-subtitle {
-    font-size: 15px;
-  }
-
-  .secondary-button {
-    align-self: flex-start;
-  }
-
-  /* Recipe cards — action buttons drop below the card */
-  #recipeVaultScreen .recipe-image-wrapper,
-  #favoritesScreen .recipe-image-wrapper {
-    width: 84px;
-    min-width: 84px;
-    height: 84px;
-  }
-
-  .recipe-card-text,
-  #recipeVaultScreen .recipe-card-text,
-  #favoritesScreen .recipe-card-text {
-    padding-right: 0;
-  }
-
-  #recipeVaultScreen .recipe-card-actions,
-  #favoritesScreen .recipe-card-actions {
-    position: static;
-    margin-top: 14px;
-    justify-content: flex-end;
-  }
-
-  /* Forms & rows stack */
-  .ingredient-row {
-    grid-template-columns: 1fr;
-  }
-
-  .delete-ingredient-button {
-    justify-self: end;
-  }
-
-  .smart-import-options {
-    grid-template-columns: 1fr;
-  }
-
-  /* Meal planner */
-  .meal-slots-row {
-    grid-template-columns: 1fr;
-  }
-
-  .meal-day-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .inline-schedule-box,
-  #recipeVaultScreen .inline-schedule-box,
-  #favoritesScreen .inline-schedule-box {
-    grid-template-columns: 1fr;
-  }
-
-  .planned-recipe-row {
-    flex-wrap: wrap;
-  }
-
-  .cooked-meal-button {
-    width: 100%;
-    margin-top: 6px;
-  }
-
-  /* Toolbars stack */
-  .favorites-toolbar,
-  .favorite-sort-buttons,
-  .import-buttons {
-    flex-direction: column;
-  }
 }
 
 /* ==================================================
@@ -2526,10 +2358,36 @@ select {
   position: relative;
 }
 
-.logout-button {
+.dashboard-actions {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.family-button {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff7ea;
+  color: #b8863a;
+  border: 1px solid #ecd7a6;
+  box-shadow: none;
+}
+
+.family-button:hover {
+  background: #fdf3e0;
+  border-color: #e0b063;
+  color: #9c6f28;
+  transform: translateY(-1px);
+}
+
+.logout-button {
   margin: 0;
   padding: 10px 16px;
   font-size: 13px;
@@ -2572,6 +2430,56 @@ select {
   border-radius: 16px;
   padding: 18px 12px;
   margin: 8px 0 22px;
+  text-align: center;
+}
+
+/* ==================================================
+   FAMILY & PROFILE PANEL
+================================================== */
+
+.family-help {
+  color: #8a757c;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 4px 0 16px;
+}
+
+#familyScreen label {
+  display: block;
+  margin-bottom: 8px;
+  color: #6c5b61;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+#familyScreen input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #ead8df;
+  background: #fffdfd;
+  color: #4f4347;
+  font-size: 15px;
+  margin-bottom: 18px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#familyScreen input:focus {
+  outline: none;
+  border-color: #e7b6c7;
+  box-shadow: 0 0 0 3px rgba(231, 182, 199, 0.18);
+}
+
+.family-code-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.family-code-actions button {
+  flex: 1;
+  justify-content: center;
 }
 
 /* ==================================================
@@ -2666,4 +2574,235 @@ select {
 .snapshot-good-msg i {
   color: #8faf88;
   font-size: 18px;
+}
+
+/* ==================================================
+   PASSWORD SHOW / HIDE
+================================================== */
+
+.auth-card .password-field {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.auth-card .password-field input {
+  margin-bottom: 0;
+  padding-right: 48px;
+}
+
+.auth-card .password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: #b88d3f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.auth-card .password-toggle:hover {
+  background: none;
+  box-shadow: none;
+  transform: translateY(-50%);
+  color: #8f6f2e;
+}
+
+/* ==================================================
+   MOBILE LAYOUT  (kept last so it always wins)
+================================================== */
+
+@media (max-width: 650px) {
+  body {
+    padding: 14px;
+  }
+
+  h1 {
+    font-size: 30px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .auth-card {
+    padding: 30px 22px;
+  }
+
+  /* Dashboard header, logo, greeting */
+  .dashboard-header {
+    margin-bottom: 40px;
+  }
+
+  .logo-script {
+    font-size: 34px;
+  }
+
+  .logo-title {
+    display: block;
+    margin-left: 0;
+    font-size: 24px;
+  }
+
+  .dashboard-greeting h1 {
+    font-size: 30px;
+  }
+
+  .dashboard-actions {
+    position: static;
+    justify-content: center;
+    margin: 0 auto 18px;
+  }
+
+  /* Dashboard cards — two per row, icon stacked on top */
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .dashboard-card {
+    min-height: 0;
+    padding: 22px 14px;
+    border-radius: 22px;
+    text-align: center;
+  }
+
+  .dashboard-card::before {
+    display: none;
+  }
+
+  .dashboard-icon {
+    position: static;
+    transform: none;
+    margin-bottom: 8px;
+    font-size: 32px;
+  }
+
+  .dashboard-card h2 {
+    margin-top: 4px;
+    font-size: 20px;
+  }
+
+  .dashboard-stat {
+    font-size: 13px;
+  }
+
+  /* Snapshots stack vertically */
+  .dashboard-snapshots {
+    grid-template-columns: 1fr;
+  }
+
+  #todayPlanSnapshot {
+    grid-row: auto;
+  }
+
+  /* Page headers (Recipe Vault, Meal Planner, etc.) */
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .page-script {
+    font-size: 26px;
+  }
+
+  .page-title-group h1 {
+    font-size: 32px;
+  }
+
+  .page-title-group h1 i {
+    font-size: 26px;
+  }
+
+  .page-subtitle {
+    font-size: 15px;
+  }
+
+  .secondary-button {
+    align-self: flex-start;
+  }
+
+  /* Recipe cards — action buttons drop below the card */
+  #recipeVaultScreen .recipe-image-wrapper,
+  #favoritesScreen .recipe-image-wrapper {
+    width: 84px;
+    min-width: 84px;
+    height: 84px;
+  }
+
+  .recipe-card-text,
+  #recipeVaultScreen .recipe-card-text,
+  #favoritesScreen .recipe-card-text {
+    padding-right: 0;
+  }
+
+  #recipeVaultScreen .recipe-card-actions,
+  #favoritesScreen .recipe-card-actions {
+    position: static;
+    margin-top: 14px;
+    justify-content: flex-end;
+  }
+
+  /* Forms & rows stack */
+  .ingredient-row {
+    grid-template-columns: 1fr;
+  }
+
+  .delete-ingredient-button {
+    justify-self: end;
+  }
+
+  .smart-import-options {
+    grid-template-columns: 1fr;
+  }
+
+  /* Meal planner */
+  .meal-slots-row {
+    grid-template-columns: 1fr;
+  }
+
+  .meal-day-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .inline-schedule-box,
+  #recipeVaultScreen .inline-schedule-box,
+  #favoritesScreen .inline-schedule-box {
+    grid-template-columns: 1fr;
+  }
+
+  .planned-recipe-row {
+    flex-wrap: wrap;
+  }
+
+  .cooked-meal-button {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  /* Toolbars stack */
+  .favorites-toolbar,
+  .favorite-sort-buttons,
+  .import-buttons {
+    flex-direction: column;
+  }
+}
+
+/* Hide the decorative meta dividers */
+.recipe-card-meta .recipe-meta-divider,
+#recipeVaultScreen .recipe-card-meta .recipe-meta-divider,
+#favoritesScreen .recipe-card-meta .recipe-meta-divider {
+  display: none;
 }
