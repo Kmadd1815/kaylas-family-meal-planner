@@ -108,6 +108,12 @@
           </button>
         </div>
 
+        <div class="auth-forgot-row" id="authForgotRow">
+          <button type="button" id="forgotPasswordButton" class="auth-link">
+            Forgot password?
+          </button>
+        </div>
+
         <button id="authSubmitButton">Log In</button>
 
         <p class="auth-toggle">
@@ -3089,6 +3095,39 @@ ${
         );
       }
 
+      // Lower rank = more relevant. Name matches beat category/notes,
+      // which beat ingredient-only matches.
+      function searchRelevanceRank(recipe, searchText) {
+        const name = (recipe.name || "").toLowerCase();
+        if (name.startsWith(searchText)) return 0;
+        if (name.includes(searchText)) return 1;
+
+        const category = (recipe.category || "").toLowerCase();
+        const notes = (recipe.notes || "").toLowerCase();
+        if (category.includes(searchText) || notes.includes(searchText)) {
+          return 2;
+        }
+
+        return 3; // matched only on an ingredient
+      }
+
+      function sortBySearchRelevance(recipeArray, searchText) {
+        return recipeArray
+          .map(function (recipe, index) {
+            return {
+              recipe: recipe,
+              index: index,
+              rank: searchRelevanceRank(recipe, searchText),
+            };
+          })
+          .sort(function (a, b) {
+            return a.rank - b.rank || a.index - b.index;
+          })
+          .map(function (entry) {
+            return entry.recipe;
+          });
+      }
+
       function recipeMatchesCategory(recipe) {
         if (recipeCategoryFilterValue === "all") {
           return true;
@@ -3116,7 +3155,7 @@ ${
       }
 
       function getFilteredAndSortedRecipes() {
-        const searchText = recipeSearch.value.toLowerCase();
+        const searchText = recipeSearch.value.toLowerCase().trim();
 
         let filteredRecipes = recipes
           .slice()
@@ -3127,7 +3166,15 @@ ${
             return recipeMatchesCategory(recipe);
           });
 
-        return sortRecipes(filteredRecipes);
+        const sorted = sortRecipes(filteredRecipes);
+
+        // While searching, float the most relevant matches (name first) to the
+        // top, keeping the chosen sort order within each relevance tier.
+        if (searchText === "") {
+          return sorted;
+        }
+
+        return sortBySearchRelevance(sorted, searchText);
       }
 
       /* ==================================================
@@ -3329,8 +3376,12 @@ ${notesText}
 
         const starButton = options.showFavoriteButton
           ? `
-                  <button class="favorite-star-button">
-                    <i class="icon-heart"></i>
+                  <button class="favorite-star-button${
+                    recipe.favorite ? " is-favorited" : ""
+                  }" aria-label="${
+                    recipe.favorite ? "Remove favorite" : "Add favorite"
+                  }">
+                    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
                   </button>
                 `
           : "";
@@ -4231,11 +4282,12 @@ ${
 
               if (searchText.trim() === "") return;
 
-              const matchingRecipes = recipes
-                .filter(function (recipe) {
-                  return recipeMatchesSearch(recipe, searchText);
-                })
-                .slice(0, 8);
+              const matchingRecipes = sortBySearchRelevance(
+                recipes.filter(function (recipe) {
+                  return recipeMatchesSearch(recipe, searchText.trim());
+                }),
+                searchText.trim()
+              ).slice(0, 8);
 
               if (matchingRecipes.length === 0) {
                 resultsBox.innerHTML = "<p>No matching recipes.</p>";
@@ -5044,6 +5096,11 @@ ${
         }
 
         authNameField.classList.toggle("hidden", authMode !== "signup");
+
+        const forgotRow = document.getElementById("authForgotRow");
+        if (forgotRow) {
+          forgotRow.classList.toggle("hidden", authMode !== "login");
+        }
       }
 
       function friendlyAuthError(error) {
@@ -5120,6 +5177,29 @@ ${
           authSubmitButton.textContent = originalText;
         }
       });
+
+      const forgotPasswordButton =
+        document.getElementById("forgotPasswordButton");
+      if (forgotPasswordButton) {
+        forgotPasswordButton.addEventListener("click", async function () {
+          const email = authEmail.value.trim();
+          if (!email) {
+            showToast("Enter your email above, then tap Forgot password.");
+            authEmail.focus();
+            return;
+          }
+
+          try {
+            await auth.sendPasswordResetEmail(email);
+            showToast(
+              "Password reset email sent. Check your inbox.",
+              "success"
+            );
+          } catch (error) {
+            showToast(friendlyAuthError(error));
+          }
+        });
+      }
 
       if (logoutButton) {
         logoutButton.addEventListener("click", function () {

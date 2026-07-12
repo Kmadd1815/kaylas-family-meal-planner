@@ -1934,6 +1934,26 @@ select {
   border-color: #eeb6c6;
 }
 
+.favorite-star-button svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+}
+
+#recipeVaultScreen .recipe-card-icons .favorite-star-button.is-favorited,
+#favoritesScreen .recipe-card-icons .favorite-star-button.is-favorited {
+  background: #f7c6d4;
+  border-color: #e88ba6;
+  color: #bb3a5b;
+}
+
+#recipeVaultScreen .recipe-card-icons .favorite-star-button.is-favorited svg,
+#favoritesScreen .recipe-card-icons .favorite-star-button.is-favorited svg {
+  fill: currentColor;
+}
+
 #recipeVaultScreen .recipe-card-actions,
 #favoritesScreen .recipe-card-actions {
   position: static;
@@ -2388,6 +2408,19 @@ select {
 #authSubmitButton {
   width: 100%;
   margin-top: 6px;
+}
+
+.auth-forgot-row {
+  text-align: right;
+  margin: -6px 0 8px;
+}
+
+.auth-forgot-row.hidden {
+  display: none;
+}
+
+.auth-forgot-row .auth-link {
+  font-size: 13px;
 }
 
 .auth-toggle {
