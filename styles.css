@@ -1045,11 +1045,8 @@ select {
   justify-content: space-between;
   gap: 8px;
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #f2dce4;
-  border-radius: 14px;
-  padding: 10px 12px;
-  margin-top: 10px;
+  padding: 5px 0;
+  margin-top: 6px;
   color: #40363a;
   font-weight: 600;
   font-size: 14px;
@@ -1937,6 +1934,9 @@ select {
 
 #recipeVaultScreen .recipe-card-actions,
 #favoritesScreen .recipe-card-actions {
+  position: static;
+  top: auto;
+  right: auto;
   display: flex;
   gap: 8px;
   margin-top: 16px;
