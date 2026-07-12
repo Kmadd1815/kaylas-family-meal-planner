@@ -357,19 +357,19 @@
             <div class="smart-import-panel">
               <h3>
                 <i class="icon-link"></i>
-                Import from Website
+                Import from a Link
               </h3>
 
               <p>
-                Website importing is coming soon — for now, use Paste Recipe on
-                the right.
+                Paste a recipe website or a YouTube cooking video and we'll fill
+                in the form for you.
               </p>
 
-              <label for="importRecipeUrl">Recipe Website</label>
+              <label for="importRecipeUrl">Recipe Website or YouTube</label>
               <input
                 type="url"
                 id="importRecipeUrl"
-                placeholder="https://example.com/my-favorite-recipe"
+                placeholder="Paste a recipe link or a YouTube video"
               />
 
               <button
@@ -3032,17 +3032,21 @@ ${
           importButton.textContent = "Importing...";
         }
 
+        const isYoutube = /(?:youtube\.com|youtu\.be)/i.test(url);
+        const serverBase =
+          "https://meal-planner-import-server-production.up.railway.app";
+        const endpoint = isYoutube
+          ? serverBase + "/api/importYoutube"
+          : serverBase + "/api/importRecipe";
+
         try {
-          const response = await fetch(
-            "https://meal-planner-import-server-production.up.railway.app/api/importRecipe",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ url: url }),
-            }
-          );
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: url }),
+          });
 
           const data = await response.json();
 
