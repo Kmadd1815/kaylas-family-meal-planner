@@ -286,7 +286,8 @@ h1 {
   background: #ffffff;
   border: 1px solid #f2dce4;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .dashboard-meal-tile:hover {
@@ -1764,9 +1765,9 @@ select {
 #favoritesScreen .recipe-card-main {
   display: flex;
   align-items: flex-start;
-  gap: 22px;
+  gap: 16px;
   width: 100%;
-  padding: 0;
+  padding: 0 44px 0 0;
 }
 
 #recipeVaultScreen .recipe-image-wrapper,
@@ -1824,14 +1825,12 @@ select {
 
 #recipeVaultScreen .recipe-card h3,
 #favoritesScreen .recipe-card h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 0;
   color: #40363a;
-  font-size: 24px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 21px;
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   line-height: 1.2;
 }
 
@@ -1844,22 +1843,22 @@ select {
 #favoritesScreen .recipe-card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 #recipeVaultScreen .recipe-card-meta span,
 #favoritesScreen .recipe-card-meta span {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 6px 12px;
+  min-height: 0;
+  padding: 4px 9px;
   border-radius: 999px;
   background: #fff7fa;
   border: 1px solid #f0dce4;
   color: #7d6a70;
-  font-size: 13px;
-  font-weight: 650;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -1868,66 +1867,101 @@ select {
   display: none;
 }
 
-#recipeVaultScreen .recipe-card-actions,
-#favoritesScreen .recipe-card-actions {
+#recipeVaultScreen .recipe-card-icons,
+#favoritesScreen .recipe-card-icons {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
+  z-index: 2;
 }
 
-#recipeVaultScreen .favorite-star-button,
-#recipeVaultScreen .schedule-recipe-button,
-#recipeVaultScreen .edit-recipe-button,
-#recipeVaultScreen .delete-recipe-button,
-#favoritesScreen .favorite-star-button,
-#favoritesScreen .schedule-recipe-button,
-#favoritesScreen .edit-recipe-button,
-#favoritesScreen .delete-recipe-button {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+#recipeVaultScreen .recipe-card-icons .favorite-star-button,
+#favoritesScreen .recipe-card-icons .favorite-star-button,
+#recipeVaultScreen .recipe-eye-indicator,
+#favoritesScreen .recipe-eye-indicator {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
   padding: 0;
   margin: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #ead8df;
-  color: #c9a04d;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
-  box-shadow: 0 6px 14px rgba(221, 188, 199, 0.18);
-}
-
-#recipeVaultScreen .favorite-star-button {
-  position: static;
-  box-shadow: none;
-  background: transparent;
-  border: none;
+  font-size: 16px;
+  background: #fff7ea;
+  border: 1px solid #ecd7a6;
   color: #c9a04d;
+  box-shadow: none;
 }
 
-#recipeVaultScreen .favorite-star-button:hover,
-#recipeVaultScreen .schedule-recipe-button:hover,
-#recipeVaultScreen .edit-recipe-button:hover,
-#recipeVaultScreen .delete-recipe-button:hover,
-#favoritesScreen .favorite-star-button:hover,
-#favoritesScreen .schedule-recipe-button:hover,
-#favoritesScreen .edit-recipe-button:hover,
-#favoritesScreen .delete-recipe-button:hover {
-  background: #fff1f6;
+#recipeVaultScreen .recipe-card-icons .favorite-star-button,
+#favoritesScreen .recipe-card-icons .favorite-star-button {
+  background: #fdeef2;
+  border-color: #f3cdd8;
+  color: #d76a86;
+}
+
+#recipeVaultScreen .recipe-card-icons .favorite-star-button:hover,
+#favoritesScreen .recipe-card-icons .favorite-star-button:hover {
+  background: #fbdbe4;
+  border-color: #eeb6c6;
+}
+
+#recipeVaultScreen .recipe-card-actions,
+#favoritesScreen .recipe-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f4e6ec;
+}
+
+#recipeVaultScreen .recipe-card-actions button,
+#favoritesScreen .recipe-card-actions button {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 6px;
+  margin: 0;
+  border-radius: 12px;
+  background: #fff7fa;
+  border: 1px solid #eed9e1;
+  color: #7a646c;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+#recipeVaultScreen .recipe-card-actions button i,
+#favoritesScreen .recipe-card-actions button i {
+  font-size: 15px;
+}
+
+#recipeVaultScreen .recipe-card-actions button:hover,
+#favoritesScreen .recipe-card-actions button:hover {
+  background: #fdeff3;
   border-color: #e7b6c7;
-  color: #b88d3f;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(231, 182, 199, 0.28);
+  color: #4f4347;
+}
+
+#recipeVaultScreen .delete-recipe-button,
+#favoritesScreen .delete-recipe-button {
+  color: #b15b6c;
 }
 
 #recipeVaultScreen .delete-recipe-button:hover,
 #favoritesScreen .delete-recipe-button:hover {
-  color: #b15b6c;
+  color: #9a3f52;
+  border-color: #e7a9b7;
 }
 
 #recipeVaultScreen .inline-schedule-box,
@@ -2577,6 +2611,16 @@ select {
 }
 
 /* ==================================================
+   RECIPE META DIVIDER FIX
+================================================== */
+
+.recipe-card-meta .recipe-meta-divider,
+#recipeVaultScreen .recipe-card-meta .recipe-meta-divider,
+#favoritesScreen .recipe-card-meta .recipe-meta-divider {
+  display: none;
+}
+
+/* ==================================================
    PASSWORD SHOW / HIDE
 ================================================== */
 
@@ -2638,7 +2682,6 @@ select {
     padding: 30px 22px;
   }
 
-  /* Dashboard header, logo, greeting */
   .dashboard-header {
     margin-bottom: 40px;
   }
@@ -2659,11 +2702,10 @@ select {
 
   .dashboard-actions {
     position: static;
-    justify-content: center;
-    margin: 0 auto 18px;
+    justify-content: space-between;
+    margin: 0 0 18px;
   }
 
-  /* Dashboard cards — two per row, icon stacked on top */
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
@@ -2696,7 +2738,6 @@ select {
     font-size: 13px;
   }
 
-  /* Snapshots stack vertically */
   .dashboard-snapshots {
     grid-template-columns: 1fr;
   }
@@ -2705,7 +2746,6 @@ select {
     grid-row: auto;
   }
 
-  /* Page headers (Recipe Vault, Meal Planner, etc.) */
   .page-header {
     flex-direction: column;
     gap: 16px;
@@ -2732,7 +2772,6 @@ select {
     align-self: flex-start;
   }
 
-  /* Recipe cards — action buttons drop below the card */
   #recipeVaultScreen .recipe-image-wrapper,
   #favoritesScreen .recipe-image-wrapper {
     width: 84px;
@@ -2748,12 +2787,9 @@ select {
 
   #recipeVaultScreen .recipe-card-actions,
   #favoritesScreen .recipe-card-actions {
-    position: static;
     margin-top: 14px;
-    justify-content: flex-end;
   }
 
-  /* Forms & rows stack */
   .ingredient-row {
     grid-template-columns: 1fr;
   }
@@ -2766,7 +2802,6 @@ select {
     grid-template-columns: 1fr;
   }
 
-  /* Meal planner */
   .meal-slots-row {
     grid-template-columns: 1fr;
   }
@@ -2792,17 +2827,9 @@ select {
     margin-top: 6px;
   }
 
-  /* Toolbars stack */
   .favorites-toolbar,
   .favorite-sort-buttons,
   .import-buttons {
     flex-direction: column;
   }
-}
-
-/* Hide the decorative meta dividers */
-.recipe-card-meta .recipe-meta-divider,
-#recipeVaultScreen .recipe-card-meta .recipe-meta-divider,
-#favoritesScreen .recipe-card-meta .recipe-meta-divider {
-  display: none;
 }

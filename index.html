@@ -4,10 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kayla's Family Meal Planner</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#f6b8c9" />
+    <meta name="theme-color" content="#f7cede" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Kayla's Family Meal Planner" />
+    <meta
+      property="og:description"
+      content="Plan meals, save recipes, and share a grocery list with your family."
+    />
+    <meta
+      property="og:url"
+      content="https://kmadd1815.github.io/kaylas-family-meal-planner/"
+    />
+    <meta
+      property="og:image"
+      content="https://kmadd1815.github.io/kaylas-family-meal-planner/og-image.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Kayla's Family Meal Planner" />
+    <meta
+      name="twitter:description"
+      content="Plan meals, save recipes, and share a grocery list with your family."
+    />
+    <meta
+      name="twitter:image"
+      content="https://kmadd1815.github.io/kaylas-family-meal-planner/og-image.png"
+    />
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="stylesheet"
@@ -259,8 +286,8 @@
       <div class="card">
         <h2><i class="icon-users"></i> Family Code</h2>
         <p class="family-help">
-          Share this code with your family so they can join this kitchen and see
-          the same recipes, meal plan, and grocery list.
+          Share this code with your family so they can join this kitchen and
+          see the same recipes, meal plan, and grocery list.
         </p>
         <div class="family-code" id="familyCodeDisplay">------</div>
         <div class="family-code-actions">
@@ -2461,7 +2488,7 @@
             })${pantryStatusText}
 </span>
 
-<div class="pantry-item-actions">
+          <div class="pantry-item-actions">
             <button
               class="edit-pantry-item-button"
               data-item-id="${item.id}"
@@ -3299,18 +3326,20 @@ ${notesText}
           : "";
 
         const editButton = options.showEditButton
-          ? `<button class="edit-recipe-button"><i class="icon-pencil"></i></button>`
+          ? `<button class="edit-recipe-button"><i class="icon-pencil"></i> Edit</button>`
           : "";
 
         const deleteButton = options.showDeleteButton
-          ? `<button class="delete-recipe-button"><i class="icon-trash-2"></i></button>`
+          ? `<button class="delete-recipe-button"><i class="icon-trash-2"></i> Delete</button>`
           : "";
 
         const scheduleButton = options.showScheduleButton
-          ? `<button class="schedule-recipe-button"><i class="icon-calendar-plus"></i></button>`
+          ? `<button class="schedule-recipe-button"><i class="icon-calendar-plus"></i> Schedule</button>`
           : "";
 
-        const icon = options.useEyeIcon ? '<i class="icon-eye"></i>' : "";
+        const eyeIndicator = options.useEyeIcon
+          ? '<span class="recipe-eye-indicator"><i class="icon-eye"></i></span>'
+          : "";
 
         const viewsText = options.showViews
           ? `<p>Views: ${recipe.viewCount}</p>`
@@ -3344,14 +3373,16 @@ ${notesText}
         const details = openRecipe === recipe ? buildRecipeDetails(recipe) : "";
 
         recipeCard.innerHTML = `
+                <div class="recipe-card-icons">
+                  ${starButton}
+                  ${eyeIndicator}
+                </div>
+
                 <div class="recipe-card-main">
                   ${photoText}
 
                   <div class="recipe-card-text">
-                    <h3>
-                      ${starButton}
-                      ${icon} ${recipe.name}
-                    </h3>
+                    <h3>${recipe.name}</h3>
 
                     <div class="recipe-card-meta">
   <span>Serves ${recipe.originalServings}</span>
@@ -4141,7 +4172,9 @@ ${
                     }
                   </div>
 
-                  <div class="meal-slots-row ${isDayCollapsed ? "hidden" : ""}">
+                  <div class="meal-slots-row ${
+                    isDayCollapsed ? "hidden" : ""
+                  }">
                     ${mealRows}
                   </div>
                 `;
@@ -4284,7 +4317,10 @@ ${
       }
 
       function isIngredientHeading(line) {
-        const l = line.toLowerCase().replace(/[:]+$/, "").trim();
+        const l = line
+          .toLowerCase()
+          .replace(/[:]+$/, "")
+          .trim();
         return (
           l === "ingredients" ||
           l === "ingredient list" ||
@@ -4296,7 +4332,10 @@ ${
       }
 
       function isInstructionHeading(line) {
-        const l = line.toLowerCase().replace(/[:]+$/, "").trim();
+        const l = line
+          .toLowerCase()
+          .replace(/[:]+$/, "")
+          .trim();
         return (
           l === "directions" ||
           l === "instructions" ||
@@ -4337,11 +4376,9 @@ ${
           "©",
           "http",
         ];
-        if (
-          junk.some(function (j) {
-            return l.includes(j);
-          })
-        ) {
+        if (junk.some(function (j) {
+          return l.includes(j);
+        })) {
           return true;
         }
         // Recipe-card serving multipliers like "1x", "2x", "3x".
@@ -4552,11 +4589,16 @@ ${
       lowInventoryList.classList.add("hidden");
 
       function updateGreeting() {
-        const dashboardGreeting = document.getElementById("dashboardGreeting");
+        const dashboardGreeting =
+          document.getElementById("dashboardGreeting");
         const currentHour = new Date().getHours();
 
         const user = auth.currentUser;
-        const name = user && user.displayName ? user.displayName.trim() : "";
+        let name =
+          user && user.displayName ? user.displayName.trim() : "";
+        if (!name && signupDisplayName) {
+          name = signupDisplayName;
+        }
 
         let timeOfDay = "Evening";
         if (currentHour < 12) {
@@ -4974,6 +5016,7 @@ ${
       const authNameField = document.getElementById("authNameField");
 
       let authMode = "login";
+      let signupDisplayName = "";
 
       function updateAuthMode() {
         if (authMode === "login") {
@@ -4997,7 +5040,8 @@ ${
         const code = error && error.code ? error.code : "";
         if (code === "auth/invalid-email")
           return "That email doesn't look right.";
-        if (code === "auth/missing-password") return "Please enter a password.";
+        if (code === "auth/missing-password")
+          return "Please enter a password.";
         if (code === "auth/weak-password")
           return "Password should be at least 6 characters.";
         if (code === "auth/email-already-in-use")
@@ -5049,11 +5093,12 @@ ${
           if (authMode === "login") {
             await auth.signInWithEmailAndPassword(email, password);
           } else {
-            const credential = await auth.createUserWithEmailAndPassword(
-              email,
-              password
-            );
+            const credential =
+              await auth.createUserWithEmailAndPassword(email, password);
             const name = authName.value.trim();
+            if (name) {
+              signupDisplayName = name;
+            }
             if (name && credential.user) {
               await credential.user.updateProfile({ displayName: name });
             }
@@ -5316,9 +5361,13 @@ ${
         shareFamilyCodeButton.addEventListener("click", async function () {
           if (!currentShareCode) return;
 
+          const appUrl =
+            "https://kmadd1815.github.io/kaylas-family-meal-planner/";
           const shareText =
             "Join our family kitchen on Kayla's Family Meal Planner! " +
-            "Use family code: " +
+            "Open the app here: " +
+            appUrl +
+            "\nThen use family code: " +
             currentShareCode;
 
           if (navigator.share) {
@@ -5548,6 +5597,7 @@ ${
         } else {
           currentHouseholdId = null;
           currentShareCode = "";
+          signupDisplayName = "";
           syncedHouseholdId = null;
           if (recipesUnsubscribe) {
             recipesUnsubscribe();
