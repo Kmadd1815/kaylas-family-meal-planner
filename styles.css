@@ -1054,6 +1054,7 @@ select {
 
 .planned-recipe-name-button {
   background: none;
+  border: none;
   color: #40363a;
   padding: 0;
   margin: 0;
@@ -1072,6 +1073,7 @@ select {
 
 .remove-planned-recipe-button {
   background: none;
+  border: none;
   color: #b15b6c;
   padding: 0;
   margin: 0;
