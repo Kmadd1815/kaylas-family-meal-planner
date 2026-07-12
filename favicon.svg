@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- pink background -->
+  <rect width="512" height="512" rx="120" fill="#f2a9bf" />
+
+  <!-- planner body -->
+  <rect x="150" y="150" width="212" height="252" rx="26" fill="#ffffff" />
+
+  <!-- spiral binding rings across the top -->
+  <g stroke="#e0b063" stroke-width="16" stroke-linecap="round">
+    <line x1="192" y1="126" x2="192" y2="178" />
+    <line x1="236" y1="126" x2="236" y2="178" />
+    <line x1="280" y1="126" x2="280" y2="178" />
+    <line x1="324" y1="126" x2="324" y2="178" />
+  </g>
+
+  <!-- ruled lines -->
+  <g stroke="#e0b063" stroke-width="16" stroke-linecap="round">
+    <line x1="192" y1="242" x2="320" y2="242" />
+    <line x1="192" y1="290" x2="320" y2="290" />
+    <line x1="192" y1="338" x2="320" y2="338" />
+  </g>
+</svg>
