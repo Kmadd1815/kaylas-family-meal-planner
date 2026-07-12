@@ -4881,7 +4881,7 @@ ${
         options = options || {};
         const items = getGroceryItemsForHomeAssistant();
 
-        if (items.length === 0 && !options.allowEmpty) {
+        if (items.length === 0) {
           if (!options.silent) {
             showToast(
               "Nothing to send — your grocery list is empty or all checked off."
@@ -4913,15 +4913,21 @@ ${
           }
 
           if (!options.silent) {
-            const bits = [];
-            if (data.added) bits.push(data.added + " added");
-            if (data.removed) bits.push(data.removed + " removed");
-            showToast(
-              bits.length
-                ? "Home Assistant updated (" + bits.join(", ") + ")."
-                : "Home Assistant is already in sync.",
-              "success"
-            );
+            let msg;
+            if (data.added) {
+              msg =
+                "Added " +
+                data.added +
+                " item" +
+                (data.added === 1 ? "" : "s") +
+                " to Home Assistant.";
+              if (data.skipped) {
+                msg += " (" + data.skipped + " already there.)";
+              }
+            } else {
+              msg = "Everything's already on your Home Assistant list.";
+            }
+            showToast(msg, "success");
           }
         } catch (error) {
           if (!options.silent) {
@@ -4943,7 +4949,7 @@ ${
         if (!homeAssistantAutoSyncOn()) return;
         clearTimeout(haSyncTimer);
         haSyncTimer = setTimeout(function () {
-          syncGroceryToHomeAssistant({ silent: true, allowEmpty: true });
+          syncGroceryToHomeAssistant({ silent: true });
         }, 1500);
       }
 
@@ -4961,7 +4967,7 @@ ${
             haAutoSyncToggle.checked ? "on" : "off"
           );
           if (haAutoSyncToggle.checked) {
-            syncGroceryToHomeAssistant({ allowEmpty: true });
+            syncGroceryToHomeAssistant({});
           }
         });
       }
