@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kayla's Family Meal Planner</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#f6b8c9" />
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="stylesheet"
@@ -41,6 +45,16 @@
         <h2 id="authTitle">Welcome back</h2>
         <p id="authSubtitle">Log in to your family's kitchen.</p>
 
+        <div id="authNameField" class="hidden">
+          <label for="authName">Your Name</label>
+          <input
+            type="text"
+            id="authName"
+            placeholder="Name or nickname"
+            autocomplete="given-name"
+          />
+        </div>
+
         <label for="authEmail">Email</label>
         <input
           type="email"
@@ -50,12 +64,22 @@
         />
 
         <label for="authPassword">Password</label>
-        <input
-          type="password"
-          id="authPassword"
-          placeholder="Your password"
-          autocomplete="current-password"
-        />
+        <div class="password-field">
+          <input
+            type="password"
+            id="authPassword"
+            placeholder="Your password"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            id="authPasswordToggle"
+            class="password-toggle"
+            aria-label="Show password"
+          >
+            <i class="icon-eye"></i>
+          </button>
+        </div>
 
         <button id="authSubmitButton">Log In</button>
 
@@ -114,7 +138,12 @@
     <!-- DASHBOARD SCREEN -->
     <div class="container" id="dashboardScreen">
       <div class="dashboard-header">
-        <button id="logoutButton" class="logout-button">Log Out</button>
+        <div class="dashboard-actions">
+          <button id="familyButton" class="family-button">
+            <i class="icon-users"></i> Family
+          </button>
+          <button id="logoutButton" class="logout-button">Log Out</button>
+        </div>
         <div class="dashboard-logo">
           <span class="logo-script">Kayla's</span>
           <span class="logo-title">Family Meal Planner</span>
@@ -188,6 +217,63 @@
     </div>
 
     <!-- RECIPE VAULT SCREEN -->
+    <!-- FAMILY & PROFILE SCREEN -->
+    <div class="container hidden" id="familyScreen">
+      <div class="page-header">
+        <div class="page-title-group">
+          <span class="page-script">Your Family</span>
+
+          <h1>
+            <i class="icon-users"></i>
+            Family &amp; Profile
+          </h1>
+
+          <p class="page-subtitle">
+            Your name, and the code to invite your family to this kitchen.
+          </p>
+        </div>
+
+        <button id="backFromFamilyButton" class="secondary-button">
+          <i class="icon-arrow-left"></i>
+          Dashboard
+        </button>
+      </div>
+
+      <div class="card">
+        <h2><i class="icon-user"></i> Your Name</h2>
+        <p class="family-help">
+          This is how the dashboard greets you. You can change it anytime.
+        </p>
+        <label for="familyNameInput">Name or nickname</label>
+        <input
+          type="text"
+          id="familyNameInput"
+          placeholder="e.g. Kayla"
+          autocomplete="off"
+        />
+        <button id="saveFamilyNameButton">
+          <i class="icon-check"></i> Save Name
+        </button>
+      </div>
+
+      <div class="card">
+        <h2><i class="icon-users"></i> Family Code</h2>
+        <p class="family-help">
+          Share this code with your family so they can join this kitchen and see
+          the same recipes, meal plan, and grocery list.
+        </p>
+        <div class="family-code" id="familyCodeDisplay">------</div>
+        <div class="family-code-actions">
+          <button id="copyFamilyCodeButton" class="secondary-button">
+            <i class="icon-copy"></i> Copy Code
+          </button>
+          <button id="shareFamilyCodeButton">
+            <i class="icon-share-2"></i> Share
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="container hidden" id="recipeVaultScreen">
       <div class="page-header">
         <div class="page-title-group">
@@ -257,10 +343,9 @@
                 id="importRecipeUrlButton"
                 type="button"
                 class="primary-button"
-                disabled
               >
-                <i class="icon-clock"></i>
-                Coming Soon
+                <i class="icon-link"></i>
+                Import Recipe
               </button>
             </div>
 
@@ -829,6 +914,7 @@
       let pantryItems = [];
       let collapsedGroceryDepartments = {};
       let collapsedPantryDepartments = {};
+      let collapsedMealDays = {};
       let groceryDepartmentOverrides = {};
       let groceryDepartmentPickerItem = null;
       let hiddenGroceryItems = {};
@@ -2904,13 +2990,16 @@ ${
         }
 
         try {
-          const response = await fetch("/api/importRecipe", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ url: url }),
-          });
+          const response = await fetch(
+            "https://meal-planner-import-server-production.up.railway.app/api/importRecipe",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ url: url }),
+            }
+          );
 
           const data = await response.json();
 
@@ -4030,22 +4119,45 @@ ${
                   `;
           });
 
+          const isDayCollapsed = collapsedMealDays[day];
+
           dayCard.innerHTML = `
                   <div class="meal-day-header">
-                    <h3>${day}</h3>
-
-                    <button class="clear-day-button" data-day="${day}">
-                      Clear Day
+                    <button class="meal-day-toggle" data-day="${day}">
+                      <i class="${
+                        isDayCollapsed
+                          ? "icon-chevron-right"
+                          : "icon-chevron-down"
+                      }"></i>
+                      <h3>${day}</h3>
                     </button>
+
+                    ${
+                      isDayCollapsed
+                        ? ""
+                        : `<button class="clear-day-button" data-day="${day}">
+                      Clear Day
+                    </button>`
+                    }
                   </div>
 
-                  <div class="meal-slots-row">
+                  <div class="meal-slots-row ${isDayCollapsed ? "hidden" : ""}">
                     ${mealRows}
                   </div>
                 `;
 
           mealPlannerGrid.appendChild(dayCard);
         });
+
+        document
+          .querySelectorAll(".meal-day-toggle")
+          .forEach(function (button) {
+            button.addEventListener("click", function () {
+              const day = button.dataset.day;
+              collapsedMealDays[day] = !collapsedMealDays[day];
+              displayMealPlanner();
+            });
+          });
 
         document
           .querySelectorAll(".planned-recipe-name-button")
@@ -4156,7 +4268,7 @@ ${
           .replace(/\[\[.*?\]\]/g, "")
           .replace(/\[.*?\]\(.*?\)/g, "")
           .replace(/\*\*/g, "")
-          .replace(/^\s*[-•*]\s*/gm, "")
+          .replace(/^\s*[-•*▢□☐‣◦·]\s*/gm, "")
           .trim();
       }
 
@@ -4172,51 +4284,129 @@ ${
       }
 
       function isIngredientHeading(line) {
-        return line.toLowerCase() === "ingredients";
-      }
-
-      function isInstructionHeading(line) {
-        const lowerLine = line.toLowerCase();
-
+        const l = line.toLowerCase().replace(/[:]+$/, "").trim();
         return (
-          lowerLine === "directions" ||
-          lowerLine === "instructions" ||
-          lowerLine === "method"
+          l === "ingredients" ||
+          l === "ingredient list" ||
+          l === "what you'll need" ||
+          l === "what you need" ||
+          l === "you'll need" ||
+          l === "you will need"
         );
       }
 
-      function parseIngredientLine(line) {
-        let cleanedLine = line.replace(/:/g, "").trim();
+      function isInstructionHeading(line) {
+        const l = line.toLowerCase().replace(/[:]+$/, "").trim();
+        return (
+          l === "directions" ||
+          l === "instructions" ||
+          l === "method" ||
+          l === "steps" ||
+          l === "preparation" ||
+          l === "prep" ||
+          l === "how to make it" ||
+          l === "how to make" ||
+          l === "let's make it"
+        );
+      }
 
-        const amountMatch = cleanedLine.match(
-          /^(\d+\s\d+\/\d+|\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞]|\d+\.\d+|\d+)/
+      function isJunkLine(line) {
+        const l = line.toLowerCase();
+        const junk = [
+          "advertisement",
+          "jump to recipe",
+          "jump to",
+          "print recipe",
+          "print",
+          "save recipe",
+          "pin recipe",
+          "share",
+          "rate this",
+          "leave a review",
+          "review",
+          "nutrition",
+          "calories",
+          "prep time",
+          "cook time",
+          "total time",
+          "additional time",
+          "us customary",
+          "metric",
+          "adjust servings",
+          "watch how to make",
+          "©",
+          "http",
+        ];
+        if (
+          junk.some(function (j) {
+            return l.includes(j);
+          })
+        ) {
+          return true;
+        }
+        // Recipe-card serving multipliers like "1x", "2x", "3x".
+        if (/^\d+\s*x$/i.test(line.trim())) {
+          return true;
+        }
+        return /^[★☆⭐]+/.test(line);
+      }
+
+      function looksLikeProse(line) {
+        const startsWithAmount = /^(\d|[¼½¾⅓⅔⅛⅜⅝⅞])/.test(line);
+        // Long lines with no leading quantity are almost always description
+        // sentences, not ingredients (e.g. "Eggs: These help bind the loaf...").
+        return !startsWithAmount && line.length > 55;
+      }
+
+      function parseIngredientLine(line) {
+        let cleaned = line
+          .replace(/^[-•*▢□☐‣◦·]\s*/, "")
+          .replace(/[:]+\s*$/, "")
+          .trim();
+
+        const amountMatch = cleaned.match(
+          /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+\s*[¼½¾⅓⅔⅛⅜⅝⅞]|[¼½¾⅓⅔⅛⅜⅝⅞]|\d+(?:\.\d+)?\s*(?:-|–|—|to)\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?)/i
         );
 
         let amount = "";
         let unit = "";
-        let name = cleanedLine;
+        let name = cleaned;
 
         if (amountMatch) {
-          amount = amountMatch[0];
+          amount = amountMatch[0]
+            .replace(/\s*(?:-|–|—|to)\s*/, "-")
+            .replace(/\s+/, " ")
+            .trim();
 
-          let rest = cleanedLine.slice(amount.length).trim();
+          let rest = cleaned.slice(amountMatch[0].length).trim();
+
+          let sizeNote = "";
+          const parenMatch = rest.match(/^\(([^)]*)\)\s*/);
+          if (parenMatch) {
+            sizeNote = parenMatch[1].trim();
+            rest = rest.slice(parenMatch[0].length).trim();
+          }
 
           const unitMatch = rest.match(
-            /^(\([^)]+\)\s*)?(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|ounces?|ounce|oz|pounds?|pound|lb|lbs|cans?|can|cloves?|clove|packages?|package|sticks?|stick|pinch|dash)\b/i
+            /^(cups?|tablespoons?|tbsps?|tbs|tsps?|teaspoons?|ounces?|oz|pounds?|lbs?|grams?|g|kilograms?|kg|milliliters?|mls?|liters?|pints?|quarts?|gallons?|cloves?|sticks?|slices?|cans?|jars?|packages?|pkgs?|boxes?|box|bags?|bunch(?:es)?|heads?|sprigs?|pinch(?:es)?|dash(?:es)?|handfuls?|pieces?|fillets?)\b\.?/i
           );
 
           if (unitMatch) {
-            unit = unitMatch[0].trim();
-            name = rest.slice(unit.length).trim();
+            unit = unitMatch[1].replace(/\.$/, "").trim();
+            name = rest.slice(unitMatch[0].length).trim();
           } else {
             name = rest;
+          }
+
+          if (sizeNote) {
+            name = "(" + sizeNote + ") " + name;
           }
         }
 
         return {
           amount: amount,
           unit: unit,
-          name: name,
+          name: name.trim(),
         };
       }
       function parseImportedRecipe() {
@@ -4246,14 +4436,35 @@ ${
             directionsStartIndex = index;
           }
 
-          if (lowerLine.includes("serves") || lowerLine.includes("servings")) {
+          if (
+            lowerLine.includes("serves") ||
+            lowerLine.includes("servings") ||
+            lowerLine.includes("yield") ||
+            lowerLine.includes("makes")
+          ) {
             const servingMatch = line.match(/\d+/);
 
-            if (servingMatch) {
+            if (servingMatch && importedServings === "") {
               importedServings = servingMatch[0];
             }
           }
         });
+
+        // If there's no clear "Ingredients" heading, this is probably a blog
+        // article rather than a recipe card. Only proceed if the text looks
+        // like a real ingredient list (several lines starting with a quantity).
+        if (ingredientsStartIndex === -1) {
+          const numberedLines = lines.filter(function (line) {
+            return /^(\d|[¼½¾⅓⅔⅛⅜⅝⅞])/.test(line);
+          }).length;
+
+          if (numberedLines < 3) {
+            showToast(
+              "Couldn't find an ingredient list. Try pasting just the recipe card (tap “Jump to Recipe” on the page first), or use website import."
+            );
+            return;
+          }
+        }
 
         if (ingredientsStartIndex > 0) {
           importedName = lines[0];
@@ -4287,12 +4498,12 @@ ${
           return (
             line !== "" &&
             !isIngredientHeading(line) &&
+            !isJunkLine(line) &&
+            !looksLikeProse(line) &&
             !lowerLine.includes("servings") &&
             !lowerLine.includes("serves") &&
-            !lowerLine.includes("advertisement") &&
-            !lowerLine.includes("print") &&
-            !lowerLine.includes("save") &&
-            !lowerLine.includes("share")
+            !lowerLine.includes("yield") &&
+            !lowerLine.includes("makes")
           );
         });
 
@@ -4344,15 +4555,19 @@ ${
         const dashboardGreeting = document.getElementById("dashboardGreeting");
         const currentHour = new Date().getHours();
 
-        let greetingText = "Good Evening, Kayla!";
+        const user = auth.currentUser;
+        const name = user && user.displayName ? user.displayName.trim() : "";
 
+        let timeOfDay = "Evening";
         if (currentHour < 12) {
-          greetingText = "Good Morning, Kayla!";
+          timeOfDay = "Morning";
         } else if (currentHour < 17) {
-          greetingText = "Good Afternoon, Kayla!";
+          timeOfDay = "Afternoon";
         }
 
-        dashboardGreeting.textContent = greetingText;
+        dashboardGreeting.textContent = name
+          ? "Good " + timeOfDay + ", " + name + "!"
+          : "Good " + timeOfDay + "!";
       }
 
       recipeVaultCard.addEventListener("click", function () {
@@ -4540,6 +4755,13 @@ ${
         parseImportedRecipe();
       });
 
+      document
+        .getElementById("importRecipeUrlButton")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          importRecipeFromUrl();
+        });
+
       saveRecipeButton.addEventListener("click", function (event) {
         event.stopPropagation();
 
@@ -4676,6 +4898,27 @@ ${
                SCREEN TRANSITIONS (scroll to top)
             ================================================== */
 
+      let handlingPop = false;
+      let historyBufferSet = false;
+
+      function visibleContainerId() {
+        const screens = document.querySelectorAll(".container");
+        for (let i = 0; i < screens.length; i++) {
+          if (!screens[i].classList.contains("hidden")) {
+            return screens[i].id;
+          }
+        }
+        return null;
+      }
+
+      function goToDashboard() {
+        document.querySelectorAll(".container").forEach(function (screen) {
+          screen.classList.add("hidden");
+        });
+        dashboardScreen.classList.remove("hidden");
+        updateDashboardStats();
+      }
+
       const screenObserver = new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
           const screen = mutation.target;
@@ -4684,6 +4927,9 @@ ${
             !screen.classList.contains("hidden")
           ) {
             window.scrollTo(0, 0);
+            if (screen.id !== "dashboardScreen" && !handlingPop) {
+              history.pushState({ screen: screen.id }, "");
+            }
           }
         });
       });
@@ -4693,6 +4939,22 @@ ${
           attributes: true,
           attributeFilter: ["class"],
         });
+      });
+
+      window.addEventListener("popstate", function () {
+        if (!auth.currentUser) return;
+
+        handlingPop = true;
+        const visible = visibleContainerId();
+
+        if (visible && visible !== "dashboardScreen") {
+          goToDashboard();
+          history.pushState({ screen: "dashboard" }, "");
+        } else {
+          auth.signOut();
+        }
+
+        handlingPop = false;
       });
 
       /* ==================================================
@@ -4708,6 +4970,8 @@ ${
       const authTogglePrompt = document.getElementById("authTogglePrompt");
       const authToggleButton = document.getElementById("authToggleButton");
       const logoutButton = document.getElementById("logoutButton");
+      const authName = document.getElementById("authName");
+      const authNameField = document.getElementById("authNameField");
 
       let authMode = "login";
 
@@ -4725,6 +4989,8 @@ ${
           authTogglePrompt.textContent = "Already have an account?";
           authToggleButton.textContent = "Log in";
         }
+
+        authNameField.classList.toggle("hidden", authMode !== "signup");
       }
 
       function friendlyAuthError(error) {
@@ -4750,6 +5016,21 @@ ${
         updateAuthMode();
       });
 
+      const authPasswordToggle = document.getElementById("authPasswordToggle");
+      if (authPasswordToggle) {
+        authPasswordToggle.addEventListener("click", function () {
+          const showing = authPassword.type === "text";
+          authPassword.type = showing ? "password" : "text";
+          authPasswordToggle.innerHTML = showing
+            ? '<i class="icon-eye"></i>'
+            : '<i class="icon-eye-off"></i>';
+          authPasswordToggle.setAttribute(
+            "aria-label",
+            showing ? "Show password" : "Hide password"
+          );
+        });
+      }
+
       authSubmitButton.addEventListener("click", async function () {
         const email = authEmail.value.trim();
         const password = authPassword.value;
@@ -4768,7 +5049,14 @@ ${
           if (authMode === "login") {
             await auth.signInWithEmailAndPassword(email, password);
           } else {
-            await auth.createUserWithEmailAndPassword(email, password);
+            const credential = await auth.createUserWithEmailAndPassword(
+              email,
+              password
+            );
+            const name = authName.value.trim();
+            if (name && credential.user) {
+              await credential.user.updateProfile({ displayName: name });
+            }
           }
         } catch (error) {
           showToast(friendlyAuthError(error));
@@ -4813,6 +5101,7 @@ ${
       );
 
       let currentHouseholdId = null;
+      let currentShareCode = "";
 
       function generateShareCode() {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -4865,6 +5154,7 @@ ${
             .set({ householdId: householdRef.id });
 
           currentHouseholdId = householdRef.id;
+          currentShareCode = code;
           householdCodeDisplay.textContent = code;
           showHouseholdView("created");
         } catch (error) {
@@ -4913,6 +5203,7 @@ ${
             .set({ householdId: householdDoc.id });
 
           currentHouseholdId = householdDoc.id;
+          currentShareCode = code;
           enterApp();
           showToast("Joined your family space.", "success");
         } catch (error) {
@@ -4921,6 +5212,133 @@ ${
           householdJoinButton.disabled = false;
           householdJoinButton.textContent = "Join";
         }
+      }
+
+      /* ==================================================
+               FAMILY & PROFILE PANEL
+            ================================================== */
+
+      const familyButton = document.getElementById("familyButton");
+      const familyScreen = document.getElementById("familyScreen");
+      const backFromFamilyButton = document.getElementById(
+        "backFromFamilyButton"
+      );
+      const familyNameInput = document.getElementById("familyNameInput");
+      const saveFamilyNameButton = document.getElementById(
+        "saveFamilyNameButton"
+      );
+      const familyCodeDisplay = document.getElementById("familyCodeDisplay");
+      const copyFamilyCodeButton = document.getElementById(
+        "copyFamilyCodeButton"
+      );
+      const shareFamilyCodeButton = document.getElementById(
+        "shareFamilyCodeButton"
+      );
+
+      async function openFamilyPanel() {
+        const user = auth.currentUser;
+
+        familyNameInput.value =
+          user && user.displayName ? user.displayName : "";
+        familyCodeDisplay.textContent = currentShareCode || "…";
+
+        dashboardScreen.classList.add("hidden");
+        familyScreen.classList.remove("hidden");
+
+        // If we don't already have the code cached, fetch it from the household.
+        if (!currentShareCode && currentHouseholdId) {
+          try {
+            const doc = await db
+              .collection("households")
+              .doc(currentHouseholdId)
+              .get();
+
+            if (doc.exists && doc.data().shareCode) {
+              currentShareCode = doc.data().shareCode;
+              familyCodeDisplay.textContent = currentShareCode;
+            } else {
+              familyCodeDisplay.textContent = "Unavailable";
+            }
+          } catch (error) {
+            familyCodeDisplay.textContent = "Unavailable";
+          }
+        }
+      }
+
+      if (familyButton) {
+        familyButton.addEventListener("click", openFamilyPanel);
+      }
+
+      if (backFromFamilyButton) {
+        backFromFamilyButton.addEventListener("click", function () {
+          familyScreen.classList.add("hidden");
+          dashboardScreen.classList.remove("hidden");
+        });
+      }
+
+      if (saveFamilyNameButton) {
+        saveFamilyNameButton.addEventListener("click", async function () {
+          const user = auth.currentUser;
+          if (!user) return;
+
+          const name = familyNameInput.value.trim();
+          if (!name) {
+            showToast("Please enter a name.");
+            return;
+          }
+
+          saveFamilyNameButton.disabled = true;
+          try {
+            await user.updateProfile({ displayName: name });
+            updateGreeting();
+            showToast("Name saved.", "success");
+          } catch (error) {
+            showToast("Couldn't save your name. Please try again.");
+          } finally {
+            saveFamilyNameButton.disabled = false;
+          }
+        });
+      }
+
+      if (copyFamilyCodeButton) {
+        copyFamilyCodeButton.addEventListener("click", async function () {
+          if (!currentShareCode) return;
+          try {
+            await navigator.clipboard.writeText(currentShareCode);
+            showToast("Code copied.", "success");
+          } catch (error) {
+            showToast("Couldn't copy — try selecting the code to copy it.");
+          }
+        });
+      }
+
+      if (shareFamilyCodeButton) {
+        shareFamilyCodeButton.addEventListener("click", async function () {
+          if (!currentShareCode) return;
+
+          const shareText =
+            "Join our family kitchen on Kayla's Family Meal Planner! " +
+            "Use family code: " +
+            currentShareCode;
+
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: "Kayla's Family Meal Planner",
+                text: shareText,
+              });
+            } catch (error) {
+              // User dismissed the share sheet — nothing to do.
+            }
+          } else {
+            try {
+              await navigator.clipboard.writeText(shareText);
+              showToast("Invite copied — paste it to your family.", "success");
+            } catch (error) {
+              showToast("Your family code is " + currentShareCode);
+            }
+          }
+        });
       }
 
       /* ==================================================
@@ -5085,10 +5503,27 @@ ${
         });
       }
 
-      function enterApp() {
+      async function enterApp() {
         householdScreen.classList.add("hidden");
         startRecipeSync();
         startSharedStateSync();
+        if (!historyBufferSet) {
+          history.pushState({ screen: "dashboard" }, "");
+          historyBufferSet = true;
+        }
+
+        updateGreeting();
+
+        // A freshly signed-up profile may not have its name attached to
+        // auth.currentUser yet. Pull the latest profile, then greet again.
+        if (auth.currentUser) {
+          try {
+            await auth.currentUser.reload();
+            updateGreeting();
+          } catch (error) {
+            // Keep the best-effort greeting above.
+          }
+        }
       }
 
       householdCreateButton.addEventListener("click", createHousehold);
@@ -5108,9 +5543,11 @@ ${
           authScreen.classList.add("hidden");
           authEmail.value = "";
           authPassword.value = "";
+          authName.value = "";
           checkHousehold(user);
         } else {
           currentHouseholdId = null;
+          currentShareCode = "";
           syncedHouseholdId = null;
           if (recipesUnsubscribe) {
             recipesUnsubscribe();
@@ -5120,6 +5557,7 @@ ${
             sharedStateUnsubscribe();
             sharedStateUnsubscribe = null;
           }
+          historyBufferSet = false;
           householdScreen.classList.add("hidden");
           authScreen.classList.remove("hidden");
           authMode = "login";
