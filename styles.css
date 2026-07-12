@@ -1252,6 +1252,22 @@ select {
   margin: 0;
 }
 
+.ha-autosync-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a646c;
+  cursor: pointer;
+}
+
+.ha-autosync-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #c9a04d;
+}
+
 .grocery-item-row {
   display: flex;
   flex-wrap: wrap;

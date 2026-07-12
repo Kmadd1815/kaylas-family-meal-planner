@@ -632,6 +632,10 @@
             <i class="icon-house"></i>
             Send to Home Assistant
           </button>
+          <label class="ha-autosync-toggle">
+            <input type="checkbox" id="haAutoSyncToggle" />
+            Auto-sync
+          </label>
           <button id="clearGroceryListTopButton">Clear All Grocery Items</button>
         </div>
 
@@ -1152,6 +1156,7 @@
           JSON.stringify(checkedGroceryItems)
         );
         syncSharedState();
+        scheduleHomeAssistantSync();
       }
 
       function saveManualShoppingItems() {
@@ -1160,6 +1165,7 @@
           JSON.stringify(manualShoppingItems)
         );
         syncSharedState();
+        scheduleHomeAssistantSync();
       }
 
       function savePantryItems() {
@@ -1188,6 +1194,7 @@
           JSON.stringify(hiddenGroceryItems)
         );
         syncSharedState();
+        scheduleHomeAssistantSync();
       }
 
       function saveGroceryQuantityAdjustments() {
@@ -1196,6 +1203,7 @@
           JSON.stringify(groceryQuantityAdjustments)
         );
         syncSharedState();
+        scheduleHomeAssistantSync();
       }
 
       function saveCollapsedPantryDepartments() {
@@ -4699,6 +4707,7 @@ ${
         dashboardScreen.classList.add("hidden");
         groceryListScreen.classList.remove("hidden");
         displayGroceryList();
+        scheduleHomeAssistantSync();
       });
 
       pantryCard.addEventListener("click", function () {
@@ -4859,56 +4868,100 @@ ${
         return items;
       }
 
+      function homeAssistantAutoSyncOn() {
+        return localStorage.getItem("haAutoSync") === "on";
+      }
+
       const sendToHomeAssistantButton = document.getElementById(
         "sendToHomeAssistantButton"
       );
-      if (sendToHomeAssistantButton) {
-        sendToHomeAssistantButton.addEventListener("click", async function () {
-          const items = getGroceryItemsForHomeAssistant();
-          if (items.length === 0) {
+      const haAutoSyncToggle = document.getElementById("haAutoSyncToggle");
+
+      async function syncGroceryToHomeAssistant(options) {
+        options = options || {};
+        const items = getGroceryItemsForHomeAssistant();
+
+        if (items.length === 0 && !options.allowEmpty) {
+          if (!options.silent) {
             showToast(
               "Nothing to send — your grocery list is empty or all checked off."
             );
-            return;
+          }
+          return;
+        }
+
+        const btn = sendToHomeAssistantButton;
+        const original = btn ? btn.innerHTML : "";
+        if (btn && !options.silent) {
+          btn.disabled = true;
+          btn.textContent = "Syncing...";
+        }
+
+        try {
+          const response = await fetch(
+            "https://meal-planner-import-server-production.up.railway.app/api/syncHomeAssistant",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ items: items }),
+            }
+          );
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "Sync failed.");
           }
 
-          const originalHtml = sendToHomeAssistantButton.innerHTML;
-          sendToHomeAssistantButton.disabled = true;
-          sendToHomeAssistantButton.textContent = "Sending...";
-
-          try {
-            const response = await fetch(
-              "https://meal-planner-import-server-production.up.railway.app/api/syncHomeAssistant",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items: items }),
-              }
+          if (!options.silent) {
+            const bits = [];
+            if (data.added) bits.push(data.added + " added");
+            if (data.removed) bits.push(data.removed + " removed");
+            showToast(
+              bits.length
+                ? "Home Assistant updated (" + bits.join(", ") + ")."
+                : "Home Assistant is already in sync.",
+              "success"
             );
-
-            const data = await response.json();
-            if (!response.ok) {
-              throw new Error(data.error || "Sync failed.");
-            }
-
-            let msg =
-              "Sent " +
-              data.added +
-              " item" +
-              (data.added === 1 ? "" : "s") +
-              " to Home Assistant.";
-            if (data.skipped) {
-              msg += " (" + data.skipped + " already on the list.)";
-            }
-            showToast(msg, "success");
-          } catch (error) {
+          }
+        } catch (error) {
+          if (!options.silent) {
             showToast(
               error.message ||
                 "Couldn't reach Home Assistant. Please try again."
             );
-          } finally {
-            sendToHomeAssistantButton.disabled = false;
-            sendToHomeAssistantButton.innerHTML = originalHtml;
+          }
+        } finally {
+          if (btn && !options.silent) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+          }
+        }
+      }
+
+      var haSyncTimer = null;
+      function scheduleHomeAssistantSync() {
+        if (!homeAssistantAutoSyncOn()) return;
+        clearTimeout(haSyncTimer);
+        haSyncTimer = setTimeout(function () {
+          syncGroceryToHomeAssistant({ silent: true, allowEmpty: true });
+        }, 1500);
+      }
+
+      if (sendToHomeAssistantButton) {
+        sendToHomeAssistantButton.addEventListener("click", function () {
+          syncGroceryToHomeAssistant({});
+        });
+      }
+
+      if (haAutoSyncToggle) {
+        haAutoSyncToggle.checked = homeAssistantAutoSyncOn();
+        haAutoSyncToggle.addEventListener("change", function () {
+          localStorage.setItem(
+            "haAutoSync",
+            haAutoSyncToggle.checked ? "on" : "off"
+          );
+          if (haAutoSyncToggle.checked) {
+            syncGroceryToHomeAssistant({ allowEmpty: true });
           }
         });
       }
