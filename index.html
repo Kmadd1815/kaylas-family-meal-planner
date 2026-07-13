@@ -953,6 +953,7 @@
       let recipeCategoryFilterValue = "all";
       let recipeSortMode = "alphabetical";
       let currentRecipePhoto = "";
+      let currentRecipeSourceUrl = "";
       let checkedGroceryItems = {};
       let manualShoppingItems = [];
       let pantryItems = [];
@@ -1139,7 +1140,7 @@
           });
         }
 
-        recipeForm.style.display = "block";
+        openRecipeForm();
 
         recipeForm.scrollIntoView({
           behavior: "smooth",
@@ -1836,7 +1837,9 @@
           Number(groceryQuantityAdjustments[itemId]) || 0;
         const newAdjustment = currentAdjustment + changeAmount;
 
-        if (newAdjustment <= 0) {
+        // Allow negative adjustments so "-" can reduce a recipe item below the
+        // amount the recipe called for (and remove it once it reaches zero).
+        if (newAdjustment === 0) {
           delete groceryQuantityAdjustments[itemId];
         } else {
           groceryQuantityAdjustments[itemId] = newAdjustment;
@@ -2023,6 +2026,10 @@
           const pantryAwareItem = applyPantryToGroceryItem(item);
 
           if (!pantryAwareItem) return;
+
+          // Drop items the user has decremented down to zero (or less).
+          const displayAmount = Number(getGroceryDisplayAmount(pantryAwareItem));
+          if (!isNaN(displayAmount) && displayAmount <= 0) return;
 
           if (!groceryItemsByDepartment[pantryAwareItem.department]) {
             groceryItemsByDepartment[pantryAwareItem.department] = [];
@@ -2535,13 +2542,19 @@
               : '<i class="icon-triangle-alert" style="color:#c9a04d"></i> Low';
 
           lowInventoryList.innerHTML += `
-      <p>
-        ${statusText}: ${item.name} (${formatGroceryAmount(item.quantity)}${
+      <div class="low-inventory-row">
+        <span>${statusText}: ${item.name} (${formatGroceryAmount(
+            item.quantity
+          )}${
             item.unit
               ? " " + formatUnitForDisplay(item.quantity, item.unit)
               : ""
-          })
-      </p>
+          })</span>
+        <div class="low-inventory-actions">
+          <button class="edit-pantry-item-button" data-item-id="${item.id}"><i class="icon-pencil"></i></button>
+          <button class="delete-pantry-item-button" data-item-id="${item.id}"><i class="icon-trash-2"></i></button>
+        </div>
+      </div>
     `;
         });
       }
@@ -3138,6 +3151,7 @@ ${
         ingredientsContainer.innerHTML = "";
         createIngredientRow("", "", "");
 
+        currentRecipeSourceUrl = "";
         editingRecipe = null;
 
         recipeFormTitle.textContent = "Add a New Recipe";
@@ -3145,11 +3159,13 @@ ${
       }
 
       function openRecipeForm() {
+        recipeForm.style.display = "";
         recipeForm.classList.remove("hidden");
         addRecipeButton.innerHTML = '<i class="icon-x"></i> Close Form';
       }
 
       function closeRecipeForm() {
+        recipeForm.style.display = "";
         recipeForm.classList.add("hidden");
         addRecipeButton.innerHTML = '<i class="icon-plus"></i> Add Recipe';
       }
@@ -3201,6 +3217,7 @@ ${
             throw new Error(data.error || "Import failed.");
           }
 
+          currentRecipeSourceUrl = url;
           populateImportedRecipe(data);
         } catch (error) {
           console.error(error);
@@ -3400,6 +3417,19 @@ ${
     `
           : "";
 
+        const sourceText = recipe.sourceUrl
+          ? `
+      <p class="recipe-source">
+        <a
+          href="${recipe.sourceUrl}"
+          target="_blank"
+          rel="noopener noreferrer"
+          onclick="event.stopPropagation()"
+        ><i class="icon-link"></i> View original recipe</a>
+      </p>
+    `
+          : "";
+
         return `
                 <div class="recipe-details">
                   <p><strong>Views:</strong> ${recipe.viewCount}</p>
@@ -3437,6 +3467,8 @@ ${
                   ${tagsText}
 
 ${notesText}
+
+${sourceText}
                 </div>
               `;
       }
@@ -3505,6 +3537,8 @@ ${notesText}
         recipeTags.value = (recipe.tags || []).join(", ");
 
         recipeNotes.value = recipe.notes || "";
+
+        currentRecipeSourceUrl = recipe.sourceUrl || "";
 
         showRecipePhotoPreview(recipe.photo || "");
 
@@ -4385,7 +4419,7 @@ ${
                   `;
           });
 
-          const isDayCollapsed = collapsedMealDays[day];
+          const isDayCollapsed = collapsedMealDays[day] !== false;
 
           dayCard.innerHTML = `
                   <div class="meal-day-header">
@@ -4422,7 +4456,8 @@ ${
           .forEach(function (button) {
             button.addEventListener("click", function () {
               const day = button.dataset.day;
-              collapsedMealDays[day] = !collapsedMealDays[day];
+              collapsedMealDays[day] =
+                collapsedMealDays[day] === false ? true : false;
               displayMealPlanner();
             });
           });
@@ -4689,6 +4724,9 @@ ${
           showToast("Paste a recipe first.");
           return;
         }
+
+        // Pasted recipes have no source URL.
+        currentRecipeSourceUrl = "";
 
         text = cleanImportedText(text);
         const lines = splitRecipeLines(text);
@@ -5201,6 +5239,8 @@ ${
           editingRecipe.ingredients = ingredients;
           editingRecipe.instructions = recipeInstructions.value;
           editingRecipe.notes = recipeNotes.value;
+          editingRecipe.sourceUrl =
+            currentRecipeSourceUrl || editingRecipe.sourceUrl || "";
 
           editingRecipe.tags = recipeTags.value
             .split(",")
@@ -5235,6 +5275,7 @@ ${
             ingredients: ingredients,
             instructions: recipeInstructions.value,
             notes: recipeNotes.value,
+            sourceUrl: currentRecipeSourceUrl || "",
 
             tags: recipeTags.value
               .split(",")
@@ -5255,6 +5296,12 @@ ${
         resetRecipeForm();
         closeRecipeForm();
         moveFormToAddArea();
+
+        // Clear the import fields so it's ready for the next one, and jump up.
+        const importUrlInput = document.getElementById("importRecipeUrl");
+        if (importUrlInput) importUrlInput.value = "";
+        if (importRecipeText) importRecipeText.value = "";
+        window.scrollTo({ top: 0, behavior: "smooth" });
 
         refreshRecipeDisplays();
         displayMealPlanner();
@@ -5789,6 +5836,7 @@ ${
           ingredients: recipe.ingredients || [],
           instructions: recipe.instructions || "",
           notes: recipe.notes || "",
+          sourceUrl: recipe.sourceUrl || "",
           tags: recipe.tags || [],
           favorite: recipe.favorite || false,
           createdAt: recipe.createdAt || Date.now(),

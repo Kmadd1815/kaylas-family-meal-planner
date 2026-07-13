@@ -751,6 +751,27 @@ select {
   margin-top: 18px;
 }
 
+.recipe-source {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f2dce5;
+  font-size: 13px;
+}
+
+.recipe-source a {
+  color: #b8863a;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  word-break: break-word;
+}
+
+.recipe-source a:hover {
+  color: #9c6f28;
+}
+
 /* ==========================================
    RECIPE TAGS
 ========================================== */
@@ -1453,6 +1474,30 @@ select {
 .pantry-department-items {
   padding: 6px 16px 12px;
   border-top: 1px solid #f1dfe6;
+}
+
+.low-inventory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f6e8ee;
+}
+
+.low-inventory-row:last-child {
+  border-bottom: none;
+}
+
+.low-inventory-row > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.low-inventory-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .pantry-item-row {
