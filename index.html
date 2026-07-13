@@ -962,6 +962,7 @@
       let groceryDepartmentOverrides = {};
       let groceryDepartmentPickerItem = null;
       let groceryActionsItemId = null;
+      let groceryMergedManualIds = {};
       let hiddenGroceryItems = {};
       let groceryQuantityAdjustments = {};
       let editingPantryItem = null;
@@ -1867,10 +1868,10 @@
 
                 const cleanIngredient = cleanIngredientForGrocery(ingredient);
 
-                const cleanName = cleanIngredient.name.trim().toLowerCase();
+                const canonName = canonicalIngredientName(cleanIngredient.name);
                 const cleanUnit = cleanIngredient.unit.trim().toLowerCase();
 
-                const mapKey = cleanName + "|" + cleanUnit;
+                const mapKey = canonName + "|" + cleanUnit;
 
                 hiddenGroceryItems[mapKey] = true;
               });
@@ -1913,6 +1914,19 @@
         showToast("Added to grocery list.", "success");
       }
 
+      // A tidy grocery-list display name: strips prep words and sizes but keeps
+      // word order, then title-cases. "2 medium onions diced" -> "Onions".
+      function cleanDisplayName(name) {
+        let n = String(name || "").split(",")[0];
+        n = n.replace(/\([^)]*\)/g, " ");
+        const words = n.split(/\s+/).filter(function (w) {
+          return w && !INGREDIENT_STRIP_WORDS.has(w.toLowerCase());
+        });
+        n = words.join(" ").trim();
+        if (!n) n = String(name || "").trim();
+        return formatRecipeName(n);
+      }
+
       function displayGroceryList() {
         groceryListContainer.innerHTML = "";
 
@@ -1936,11 +1950,11 @@
 
                 if (!ingredient.name) return;
 
-                const cleanName = ingredient.name.trim().toLowerCase();
+                const canonName = canonicalIngredientName(ingredient.name);
                 const cleanUnit = ingredient.unit.trim().toLowerCase();
-                const mapKey = cleanName + "|" + cleanUnit;
+                const mapKey = canonName + "|" + cleanUnit;
                 const department =
-                  groceryDepartmentOverrides[cleanName] ||
+                  groceryDepartmentOverrides[canonName] ||
                   guessGroceryDepartment(ingredient.name);
                 const amountNumber = convertAmountToNumber(ingredient.amount);
 
@@ -1951,7 +1965,7 @@
                       ? ingredient.amount
                       : amountNumber,
                     unit: ingredient.unit,
-                    name: formatRecipeName(ingredient.name),
+                    name: cleanDisplayName(ingredient.name),
                     department: department,
                   };
                 } else {
@@ -1973,6 +1987,36 @@
           });
         });
 
+        // Fold manual grocery items into the consolidated map when they share a
+        // base name with an ingredient (so "1 Onion" + "2 onions" -> "3 onions").
+        // Unmatched manual items keep their own row and existing edit/delete.
+        const separateManualItems = [];
+        groceryMergedManualIds = {};
+        manualShoppingItems.forEach(function (manualItem) {
+          const canonName = canonicalIngredientName(manualItem.name);
+          const mergeKey = canonName + "|";
+
+          if (canonName && groceryItemMap[mergeKey]) {
+            const target = groceryItemMap[mergeKey];
+            const addNumber = convertAmountToNumber(manualItem.quantity);
+            const existingNumber = convertAmountToNumber(target.amount);
+
+            if (!isNaN(addNumber) && !isNaN(existingNumber)) {
+              target.amount =
+                Math.round((existingNumber + addNumber) * 100) / 100;
+            } else if (!isNaN(addNumber)) {
+              target.amount = target.amount + " + " + manualItem.quantity;
+            }
+
+            if (!groceryMergedManualIds[target.id]) {
+              groceryMergedManualIds[target.id] = [];
+            }
+            groceryMergedManualIds[target.id].push(manualItem.id);
+          } else {
+            separateManualItems.push(manualItem);
+          }
+        });
+
         Object.values(groceryItemMap).forEach(function (item) {
           if (hiddenGroceryItems[item.id]) return;
 
@@ -1989,7 +2033,7 @@
           );
         });
 
-        manualShoppingItems.forEach(function (item) {
+        separateManualItems.forEach(function (item) {
           if (!groceryItemsByDepartment[item.department]) {
             groceryItemsByDepartment[item.department] = [];
           }
@@ -2054,7 +2098,7 @@
 
           sortedItems.forEach(function (item) {
             const isChecked = checkedGroceryItems[item.id];
-            const cleanItemName = item.name.trim().toLowerCase();
+            const cleanItemName = canonicalIngredientName(item.name);
 
             displayedGroceryItems[item.id] = item;
 
@@ -2227,8 +2271,14 @@
 
               if (!confirmDelete) return;
 
+              const mergedIds =
+                groceryMergedManualIds[button.dataset.itemId] || [];
+
               manualShoppingItems = manualShoppingItems.filter(function (item) {
-                return item.id !== button.dataset.itemId;
+                return (
+                  item.id !== button.dataset.itemId &&
+                  mergedIds.indexOf(item.id) === -1
+                );
               });
 
               hiddenGroceryItems[button.dataset.itemId] = true;
@@ -2929,9 +2979,9 @@ ${
             recipe.ingredients.forEach(function (ingredient) {
               if (!ingredient.name) return;
 
-              const cleanName = ingredient.name.trim().toLowerCase();
+              const canonName = canonicalIngredientName(ingredient.name);
               const cleanUnit = ingredient.unit.trim().toLowerCase();
-              const mapKey = cleanName + "|" + cleanUnit;
+              const mapKey = canonName + "|" + cleanUnit;
 
               delete hiddenGroceryItems[mapKey];
             });
@@ -3913,9 +3963,9 @@ ${notesText}
 
                 if (!cleanIngredient.name) return;
 
-                const cleanName = cleanIngredient.name.trim().toLowerCase();
+                const canonName = canonicalIngredientName(cleanIngredient.name);
                 const cleanUnit = cleanIngredient.unit.trim().toLowerCase();
-                const mapKey = cleanName + "|" + cleanUnit;
+                const mapKey = canonName + "|" + cleanUnit;
 
                 if (hiddenGroceryItems[mapKey]) return;
                 if (checkedGroceryItems[mapKey]) return;
@@ -3924,9 +3974,9 @@ ${notesText}
                   id: mapKey,
                   amount: cleanIngredient.amount,
                   unit: cleanIngredient.unit,
-                  name: formatRecipeName(cleanIngredient.name),
+                  name: cleanDisplayName(cleanIngredient.name),
                   department:
-                    groceryDepartmentOverrides[cleanName] ||
+                    groceryDepartmentOverrides[canonName] ||
                     guessGroceryDepartment(cleanIngredient.name),
                 };
 
