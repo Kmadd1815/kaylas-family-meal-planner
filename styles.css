@@ -1912,6 +1912,21 @@ select {
   white-space: nowrap;
 }
 
+#recipeVaultScreen .recipe-card-meta .recipe-ready-badge,
+#favoritesScreen .recipe-card-meta .recipe-ready-badge {
+  gap: 4px;
+  background: #e9f6ea;
+  border-color: #b8ddb9;
+  color: #3f7a45;
+}
+
+#recipeVaultScreen .recipe-card-meta .recipe-almost-badge,
+#favoritesScreen .recipe-card-meta .recipe-almost-badge {
+  background: #fdf1dd;
+  border-color: #ecd7a6;
+  color: #9a742f;
+}
+
 #recipeVaultScreen .recipe-meta-divider,
 #favoritesScreen .recipe-meta-divider {
   display: none;

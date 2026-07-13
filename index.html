@@ -441,6 +441,7 @@
           <option value="alphabetical">Alphabetical</option>
           <option value="newest">Newest</option>
           <option value="mostViewed">Most Viewed</option>
+          <option value="pantry">Ready to Cook</option>
         </select>
       </div>
 
@@ -1663,6 +1664,88 @@
         }
 
         return name;
+      }
+
+      // Smart base name: strips prep words ("diced"), sizes ("medium"),
+      // parentheticals, and singularizes so "2 medium onions diced", "Onion",
+      // and "onions" all become "onion". Used to match ingredients to pantry
+      // items and (later) to consolidate the grocery list.
+      const INGREDIENT_STRIP_WORDS = new Set([
+        "small", "medium", "large", "extra", "xl", "jumbo", "big", "mini",
+        "whole", "diced", "chopped", "minced", "sliced", "grated", "shredded",
+        "peeled", "cubed", "julienned", "halved", "quartered", "mashed",
+        "melted", "softened", "beaten", "drained", "rinsed", "trimmed",
+        "seeded", "cored", "stemmed", "cut", "torn", "crumbled", "sifted",
+        "packed", "divided", "thinly", "finely", "roughly", "freshly",
+        "coarsely", "lightly", "room", "temperature", "of", "into", "pieces",
+        "piece", "fresh", "for", "plus", "more", "to", "taste", "optional",
+        "about", "approximately",
+      ]);
+      const ASSUMED_STAPLES = new Set([
+        "salt",
+        "pepper",
+        "black pepper",
+        "water",
+      ]);
+
+      function singularizeWord(word) {
+        if (word.length <= 3) return word;
+        if (word.endsWith("ies")) return word.slice(0, -3) + "y";
+        if (word.endsWith("oes")) return word.slice(0, -2);
+        if (
+          word.endsWith("shes") ||
+          word.endsWith("ches") ||
+          word.endsWith("sses")
+        ) {
+          return word.slice(0, -2);
+        }
+        if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+        return word;
+      }
+
+      function canonicalIngredientName(name) {
+        let n = String(name || "").toLowerCase();
+        n = n.split(",")[0];
+        n = n.replace(/\([^)]*\)/g, " ");
+        n = n.replace(/[^a-z\s]/g, " ");
+        const words = n
+          .split(/\s+/)
+          .filter(function (w) {
+            return w && !INGREDIENT_STRIP_WORDS.has(w);
+          })
+          .map(singularizeWord);
+        words.sort();
+        return words.join(" ").trim();
+      }
+
+      function pantryHasIngredient(ingredient) {
+        const canon = canonicalIngredientName(ingredient.name);
+        if (!canon) return false;
+        if (ASSUMED_STAPLES.has(canon)) return true;
+        return pantryItems.some(function (p) {
+          if (canonicalIngredientName(p.name) !== canon) return false;
+          const qty = convertAmountToNumber(p.quantity);
+          return isNaN(qty) || qty > 0;
+        });
+      }
+
+      function recipePantryCoverage(recipe) {
+        const ings = ((recipe && recipe.ingredients) || []).filter(function (i) {
+          return i && i.name && i.name.trim();
+        });
+        if (!ings.length) {
+          return { have: 0, total: 0, missing: 999, ratio: 0 };
+        }
+        let have = 0;
+        ings.forEach(function (ing) {
+          if (pantryHasIngredient(ing)) have++;
+        });
+        return {
+          have: have,
+          total: ings.length,
+          missing: ings.length - have,
+          ratio: have / ings.length,
+        };
       }
 
       function getPantryAmountForGroceryItem(groceryItem) {
@@ -3167,6 +3250,18 @@ ${
           });
         }
 
+        if (recipeSortMode === "pantry") {
+          return recipeArray.sort(function (a, b) {
+            const ca = recipePantryCoverage(a);
+            const cb = recipePantryCoverage(b);
+            return (
+              ca.missing - cb.missing ||
+              cb.ratio - ca.ratio ||
+              a.name.localeCompare(b.name)
+            );
+          });
+        }
+
         return recipeArray.sort(function (a, b) {
           return a.name.localeCompare(b.name);
         });
@@ -3451,6 +3546,16 @@ ${notesText}
         const scheduleBox = buildScheduleBox(recipe);
         const details = openRecipe === recipe ? buildRecipeDetails(recipe) : "";
 
+        const coverage = recipePantryCoverage(recipe);
+        const readyBadge =
+          coverage.total > 0 && coverage.missing === 0
+            ? `<span class="recipe-ready-badge"><i class="icon-circle-check"></i> Have everything</span>`
+            : coverage.missing >= 1 &&
+              coverage.missing <= 2 &&
+              coverage.ratio >= 0.6
+            ? `<span class="recipe-almost-badge">Missing ${coverage.missing}</span>`
+            : "";
+
         recipeCard.innerHTML = `
                 <div class="recipe-card-icons">
                   ${starButton}
@@ -3464,6 +3569,7 @@ ${notesText}
                     <h3>${recipe.name}</h3>
 
                     <div class="recipe-card-meta">
+  ${readyBadge}
   <span>Serves ${recipe.originalServings}</span>
 
   ${
