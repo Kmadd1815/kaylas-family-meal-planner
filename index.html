@@ -964,6 +964,7 @@
       let groceryDepartmentPickerItem = null;
       let groceryActionsItemId = null;
       let groceryMergedManualIds = {};
+      let displayedGroceryItems = {};
       let hiddenGroceryItems = {};
       let groceryQuantityAdjustments = {};
       let editingPantryItem = null;
@@ -1930,12 +1931,69 @@
         return formatRecipeName(n);
       }
 
+      function pantryItemMatching(name, unit) {
+        const canon = canonicalIngredientName(name);
+        const uc = normalizeUnit(unit);
+        return pantryItems.find(function (p) {
+          return (
+            canonicalIngredientName(p.name) === canon &&
+            normalizeUnit(p.unit) === uc
+          );
+        });
+      }
+
+      function groceryAmountForPantry(item) {
+        const n = convertAmountToNumber(getGroceryDisplayAmount(item));
+        return isNaN(n) ? 1 : n;
+      }
+
+      // Checking a grocery item off means you bought it — add it to the pantry.
+      function addGroceryItemToPantry(item) {
+        const amount = groceryAmountForPantry(item);
+        const existing = pantryItemMatching(item.name, item.unit);
+        if (existing) {
+          const current = convertAmountToNumber(existing.quantity);
+          existing.quantity = isNaN(current)
+            ? amount
+            : Math.round((current + amount) * 100) / 100;
+        } else {
+          pantryItems.push({
+            id:
+              "pantry-" +
+              Date.now() +
+              "-" +
+              Math.floor(Math.random() * 100000),
+            name: cleanDisplayName(item.name),
+            quantity: amount,
+            unit: item.unit || "",
+            department: item.department || guessGroceryDepartment(item.name),
+          });
+        }
+      }
+
+      // Un-checking reverses the pantry addition.
+      function removeGroceryItemFromPantry(item) {
+        const existing = pantryItemMatching(item.name, item.unit);
+        if (!existing) return;
+        const amount = groceryAmountForPantry(item);
+        const current = convertAmountToNumber(existing.quantity);
+        if (isNaN(current)) return;
+        const next = Math.round((current - amount) * 100) / 100;
+        if (next <= 0) {
+          pantryItems = pantryItems.filter(function (p) {
+            return p !== existing;
+          });
+        } else {
+          existing.quantity = next;
+        }
+      }
+
       function displayGroceryList() {
         groceryListContainer.innerHTML = "";
 
         const groceryItemsByDepartment = {};
         const groceryItemMap = {};
-        const displayedGroceryItems = {};
+        displayedGroceryItems = {};
 
         mealPlanDays.forEach(function (day) {
           mealTypes.forEach(function (mealType) {
@@ -2023,21 +2081,25 @@
         Object.values(groceryItemMap).forEach(function (item) {
           if (hiddenGroceryItems[item.id]) return;
 
-          const pantryAwareItem = applyPantryToGroceryItem(item);
+          let finalItem;
+          if (checkedGroceryItems[item.id]) {
+            // Already checked off (bought + added to pantry) — keep it visible
+            // and crossed off rather than subtracting it against the pantry.
+            finalItem = item;
+          } else {
+            finalItem = applyPantryToGroceryItem(item);
+            if (!finalItem) return;
 
-          if (!pantryAwareItem) return;
-
-          // Drop items the user has decremented down to zero (or less).
-          const displayAmount = Number(getGroceryDisplayAmount(pantryAwareItem));
-          if (!isNaN(displayAmount) && displayAmount <= 0) return;
-
-          if (!groceryItemsByDepartment[pantryAwareItem.department]) {
-            groceryItemsByDepartment[pantryAwareItem.department] = [];
+            // Drop items the user has decremented down to zero (or less).
+            const displayAmount = Number(getGroceryDisplayAmount(finalItem));
+            if (!isNaN(displayAmount) && displayAmount <= 0) return;
           }
 
-          groceryItemsByDepartment[pantryAwareItem.department].push(
-            pantryAwareItem
-          );
+          if (!groceryItemsByDepartment[finalItem.department]) {
+            groceryItemsByDepartment[finalItem.department] = [];
+          }
+
+          groceryItemsByDepartment[finalItem.department].push(finalItem);
         });
 
         separateManualItems.forEach(function (item) {
@@ -2261,10 +2323,22 @@
           .querySelectorAll(".grocery-checkbox")
           .forEach(function (checkbox) {
             checkbox.addEventListener("change", function () {
-              checkedGroceryItems[checkbox.dataset.itemId] = checkbox.checked;
+              const id = checkbox.dataset.itemId;
+              checkedGroceryItems[id] = checkbox.checked;
+
+              const item = displayedGroceryItems[id];
+              if (item) {
+                if (checkbox.checked) {
+                  addGroceryItemToPantry(item);
+                } else {
+                  removeGroceryItemFromPantry(item);
+                }
+                savePantryItems();
+              }
 
               saveCheckedGroceryItems();
               displayGroceryList();
+              displayPantryItems();
             });
           });
 
@@ -3570,6 +3644,9 @@ ${sourceText}
       function displayRecipeCard(recipe, listElement, options) {
         const recipeCard = document.createElement("div");
         recipeCard.classList.add("recipe-card");
+        if (openRecipe === recipe) {
+          recipeCard.classList.add("recipe-card-open");
+        }
 
         const starButton = options.showFavoriteButton
           ? `
@@ -3814,8 +3891,15 @@ ${sourceText}
             const newServings = Number(scaleInput.value);
             const originalServings = Number(recipe.originalServings);
 
-            if (!newServings || !originalServings) {
-              showToast("Please enter servings to scale this recipe.");
+            if (!originalServings) {
+              showToast(
+                "This recipe has no original servings set — add it via Edit to scale."
+              );
+              return;
+            }
+
+            if (!newServings) {
+              showToast("Enter how many servings to scale to.");
               return;
             }
 
@@ -3834,6 +3918,7 @@ ${sourceText}
             });
 
             ingredientList.innerHTML = scaledIngredientText;
+            showToast("Scaled to " + newServings + " servings.", "success");
           });
         }
 
@@ -3974,6 +4059,16 @@ ${sourceText}
               openRecipe = recipe;
 
               refreshRecipeDisplays();
+
+              // Jump straight to the opened recipe instead of the top.
+              setTimeout(function () {
+                const openCard = document.querySelector(
+                  "#recipeVaultScreen .recipe-card-open"
+                );
+                if (openCard) {
+                  openCard.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }, 60);
             });
           });
       }
