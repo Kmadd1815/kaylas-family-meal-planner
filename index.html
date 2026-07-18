@@ -3633,8 +3633,22 @@ ${sourceText}
         recipeFormTitle.textContent = "Edit Recipe";
         saveRecipeButton.textContent = "Save Changes";
 
-        recipeCard.appendChild(recipeForm);
+        // Re-render so the open recipe collapses, then drop the edit form INTO
+        // that recipe's card (replacing it) instead of beneath the open details.
+        refreshRecipeDisplays();
+
+        let card = null;
+        document
+          .querySelectorAll("#recipeVaultScreen .recipe-card")
+          .forEach(function (c) {
+            if (!card && c.dataset.recipeName === recipe.name) card = c;
+          });
+
+        const target = card || recipeCard;
+        target.innerHTML = "";
+        target.appendChild(recipeForm);
         openRecipeForm();
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
       /* ==================================================
@@ -3644,6 +3658,7 @@ ${sourceText}
       function displayRecipeCard(recipe, listElement, options) {
         const recipeCard = document.createElement("div");
         recipeCard.classList.add("recipe-card");
+        recipeCard.dataset.recipeName = recipe.name;
         if (openRecipe === recipe) {
           recipeCard.classList.add("recipe-card-open");
         }
@@ -4561,12 +4576,27 @@ ${
           .querySelectorAll(".planned-recipe-name-button")
           .forEach(function (button) {
             button.addEventListener("click", function () {
-              openMealPlannerRecipe =
-                openMealPlannerRecipe === button.dataset.recipe
-                  ? null
-                  : button.dataset.recipe;
+              const recipe = findRecipeByName(button.dataset.recipe);
+              if (!recipe) return;
 
-              displayMealPlanner();
+              // Open the recipe in the vault (and scroll to it), like the
+              // dashboard snapshot does — no more cramped inline view.
+              mealPlannerScreen.classList.add("hidden");
+              recipeVaultScreen.classList.remove("hidden");
+              openRecipe = recipe;
+              refreshRecipeDisplays();
+
+              setTimeout(function () {
+                const openCard = document.querySelector(
+                  "#recipeVaultScreen .recipe-card-open"
+                );
+                if (openCard) {
+                  openCard.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }
+              }, 60);
             });
           });
 
@@ -5295,6 +5325,8 @@ ${
       saveRecipeButton.addEventListener("click", function (event) {
         event.stopPropagation();
 
+        const wasEditing = !!editingRecipe;
+        let savedRecipe = null;
         const oldRecipeName = editingRecipe ? editingRecipe.name : "";
         const formattedRecipeName = formatRecipeName(recipeName.value);
 
@@ -5360,6 +5392,7 @@ ${
             });
           }
 
+          savedRecipe = editingRecipe;
           pushRecipe(editingRecipe);
         } else {
           const recipe = {
@@ -5383,6 +5416,7 @@ ${
             timesScheduled: 0,
           };
 
+          savedRecipe = recipe;
           pushRecipe(recipe);
         }
 
@@ -5392,14 +5426,30 @@ ${
         closeRecipeForm();
         moveFormToAddArea();
 
-        // Clear the import fields so it's ready for the next one, and jump up.
-        const importUrlInput = document.getElementById("importRecipeUrl");
-        if (importUrlInput) importUrlInput.value = "";
-        if (importRecipeText) importRecipeText.value = "";
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (wasEditing && savedRecipe) {
+          // Stay on the recipe you just edited, with its card open.
+          openRecipe = savedRecipe;
+        } else {
+          // New recipe: clear the import fields and jump to the top.
+          const importUrlInput = document.getElementById("importRecipeUrl");
+          if (importUrlInput) importUrlInput.value = "";
+          if (importRecipeText) importRecipeText.value = "";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
 
         refreshRecipeDisplays();
         displayMealPlanner();
+
+        if (wasEditing && savedRecipe) {
+          setTimeout(function () {
+            const openCard = document.querySelector(
+              "#recipeVaultScreen .recipe-card-open"
+            );
+            if (openCard) {
+              openCard.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }, 60);
+        }
 
         showToast("Recipe saved.", "success");
       });
