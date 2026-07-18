@@ -329,19 +329,6 @@
       </div>
 
       <div class="card">
-        <h2 id="favoriteRecipesTitle">
-          <i class="icon-heart"></i> Favorite Recipes (0)
-        </h2>
-        <div id="favoriteRecipeList"></div>
-        <button id="seeAllFavoritesButton">See All Favorites</button>
-      </div>
-
-      <div class="card">
-        <h2><i class="icon-eye"></i> Most Viewed Recipes</h2>
-        <div id="mostViewedRecipeList"></div>
-      </div>
-
-      <div class="card">
         <h2><i class="icon-clipboard-paste"></i> Smart Import Recipe</h2>
         <p>
           Paste a recipe below, then let the app try to fill the form for you.
@@ -415,6 +402,19 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="card">
+        <h2 id="favoriteRecipesTitle">
+          <i class="icon-heart"></i> Favorite Recipes (0)
+        </h2>
+        <div id="favoriteRecipeList"></div>
+        <button id="seeAllFavoritesButton">See All Favorites</button>
+      </div>
+
+      <div class="card">
+        <h2><i class="icon-eye"></i> Most Viewed Recipes</h2>
+        <div id="mostViewedRecipeList"></div>
       </div>
 
       <div class="card">
@@ -5508,6 +5508,29 @@ ${
         updateDashboardStats();
       }
 
+      // Returning to the dashboard closes anything left open (an expanded
+      // recipe, an edit form, expanded rows) and re-renders every screen so it's
+      // fresh the next time you open it.
+      function resetTransientViews() {
+        openRecipe = null;
+        schedulingRecipe = null;
+        openMealPlannerRecipe = null;
+        groceryActionsItemId = null;
+        pantryActionsItemId = null;
+
+        if (editingRecipe) {
+          editingRecipe = null;
+          resetRecipeForm();
+          closeRecipeForm();
+          moveFormToAddArea();
+        }
+
+        refreshRecipeDisplays();
+        displayMealPlanner();
+        displayGroceryList();
+        displayPantryItems();
+      }
+
       const screenObserver = new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
           const screen = mutation.target;
@@ -5516,7 +5539,9 @@ ${
             !screen.classList.contains("hidden")
           ) {
             window.scrollTo(0, 0);
-            if (screen.id !== "dashboardScreen" && !handlingPop) {
+            if (screen.id === "dashboardScreen") {
+              resetTransientViews();
+            } else if (!handlingPop) {
               history.pushState({ screen: screen.id }, "");
             }
           }
