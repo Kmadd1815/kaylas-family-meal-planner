@@ -3487,7 +3487,7 @@ ${
         const notesText = recipe.notes
           ? `
       <h4>Notes</h4>
-      <p>${recipe.notes}</p>
+      <p class="recipe-notes">${recipe.notes}</p>
     `
           : "";
 
@@ -3513,7 +3513,7 @@ ${
                   <div class="scaling-box">
                     <label>Scale Recipe</label>
 
-                    <p>
+                    <p class="scaling-original-label">
                       Original servings:
                       ${recipe.originalServings || "Not set"}
                     </p>
@@ -3526,7 +3526,7 @@ ${
                     />
 
                     <button class="scale-recipe-button">
-                      Scale Ingredients
+                      Scale &amp; Save
                     </button>
                   </div>
 
@@ -3538,7 +3538,7 @@ ${sourceText}
                   </ul>
 
                   <h4>Instructions</h4>
-                  <p>${recipe.instructions}</p>
+                  <p class="recipe-instructions">${recipe.instructions}</p>
 
                   ${tagsText}
 
@@ -3918,22 +3918,41 @@ ${notesText}
               return;
             }
 
-            let scaledIngredientText = "";
-
+            // Bake the scaled amounts into the recipe and save, so scheduling
+            // it later pulls the right quantities into the grocery list.
             recipe.ingredients.forEach(function (ingredient) {
-              const scaledAmount = scaleAmount(
-                ingredient.amount,
-                originalServings,
-                newServings
+              ingredient.amount = String(
+                scaleAmount(ingredient.amount, originalServings, newServings)
               );
-
-              scaledIngredientText += `
-                      <li>${scaledAmount} ${ingredient.unit} ${ingredient.name}</li>
-                    `;
             });
 
+            recipe.originalServings = String(newServings);
+
+            saveRecipes();
+            pushRecipe(recipe);
+
+            // Refresh the open card in place.
+            let scaledIngredientText = "";
+            recipe.ingredients.forEach(function (ingredient) {
+              scaledIngredientText += `
+                      <li>${ingredient.amount} ${ingredient.unit} ${ingredient.name}</li>
+                    `;
+            });
             ingredientList.innerHTML = scaledIngredientText;
-            showToast("Scaled to " + newServings + " servings.", "success");
+
+            const originalLabel = recipeCard.querySelector(
+              ".scaling-original-label"
+            );
+            if (originalLabel) {
+              originalLabel.textContent =
+                "Original servings: " + newServings;
+            }
+            scaleInput.value = newServings;
+
+            showToast(
+              "Scaled to " + newServings + " servings and saved.",
+              "success"
+            );
           });
         }
 

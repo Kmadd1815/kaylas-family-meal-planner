@@ -756,6 +756,13 @@ select {
   font-size: 13px;
 }
 
+/* Preserve the line breaks the user typed when editing instructions/notes,
+   so multi-step directions read the same as they were entered. */
+.recipe-instructions,
+.recipe-notes {
+  white-space: pre-wrap;
+}
+
 .recipe-source a {
   color: #b8863a;
   font-weight: 600;
