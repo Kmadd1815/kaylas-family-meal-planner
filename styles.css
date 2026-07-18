@@ -752,9 +752,7 @@ select {
 }
 
 .recipe-source {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid #f2dce5;
+  margin: 4px 0 14px;
   font-size: 13px;
 }
 
